@@ -22,8 +22,7 @@ import { cn } from "@/lib/utils"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  full_name: z.string().max(30).optional(),
-  email: z.email({ message: "Invalid email address" }),
+  full_name: z.string().max(255).optional(),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -40,7 +39,6 @@ const UserInformation = () => {
     criteriaMode: "all",
     defaultValues: {
       full_name: currentUser?.full_name ?? undefined,
-      email: currentUser?.email,
     },
   })
 
@@ -49,10 +47,9 @@ const UserInformation = () => {
   }
 
   const mutation = useMutation({
-    mutationFn: (data: UserUpdateMe) =>
-      UsersService.updateUserMe({ body: data }),
+    mutationFn: (data: UserUpdateMe) => UsersService.updateUserMe({ body: data }),
     onSuccess: () => {
-      showSuccessToast("User updated successfully")
+      showSuccessToast("Datos actualizados")
       toggleEditMode()
     },
     onError: handleError.bind(showErrorToast),
@@ -62,17 +59,7 @@ const UserInformation = () => {
   })
 
   const onSubmit = (data: FormData) => {
-    const updateData: UserUpdateMe = {}
-
-    // only include fields that have changed
-    if (data.full_name !== currentUser?.full_name) {
-      updateData.full_name = data.full_name
-    }
-    if (data.email !== currentUser?.email) {
-      updateData.email = data.email
-    }
-
-    mutation.mutate(updateData)
+    mutation.mutate({ full_name: data.full_name })
   }
 
   const onCancel = () => {
@@ -82,7 +69,21 @@ const UserInformation = () => {
 
   return (
     <div className="max-w-md">
-      <h3 className="text-lg font-semibold py-4">User Information</h3>
+      <h3 className="text-lg font-semibold py-4">Información del perfil</h3>
+      <div className="mb-4 flex flex-col gap-1">
+        {currentUser?.student_id && (
+          <p className="text-sm">
+            <span className="text-muted-foreground">ID de estudiante: </span>
+            {currentUser.student_id}
+          </p>
+        )}
+        {currentUser?.email && (
+          <p className="text-sm">
+            <span className="text-muted-foreground">Correo: </span>
+            {currentUser.email}
+          </p>
+        )}
+      </div>
       <Form {...form}>
         <form
           onSubmit={form.handleSubmit(onSubmit)}
@@ -94,7 +95,7 @@ const UserInformation = () => {
             render={({ field }) =>
               editMode ? (
                 <FormItem>
-                  <FormLabel>Full name</FormLabel>
+                  <FormLabel>Nombre completo</FormLabel>
                   <FormControl>
                     <Input type="text" {...field} />
                   </FormControl>
@@ -102,7 +103,7 @@ const UserInformation = () => {
                 </FormItem>
               ) : (
                 <FormItem>
-                  <FormLabel>Full name</FormLabel>
+                  <FormLabel>Nombre completo</FormLabel>
                   <p
                     className={cn(
                       "py-2 truncate max-w-sm",
@@ -116,27 +117,6 @@ const UserInformation = () => {
             }
           />
 
-          <FormField
-            control={form.control}
-            name="email"
-            render={({ field }) =>
-              editMode ? (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <FormControl>
-                    <Input type="email" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              ) : (
-                <FormItem>
-                  <FormLabel>Email</FormLabel>
-                  <p className="py-2 truncate max-w-sm">{field.value}</p>
-                </FormItem>
-              )
-            }
-          />
-
           <div className="flex gap-3">
             {editMode ? (
               <>
@@ -145,7 +125,7 @@ const UserInformation = () => {
                   loading={mutation.isPending}
                   disabled={!form.formState.isDirty}
                 >
-                  Save
+                  Guardar
                 </LoadingButton>
                 <Button
                   type="button"
@@ -153,12 +133,12 @@ const UserInformation = () => {
                   onClick={onCancel}
                   disabled={mutation.isPending}
                 >
-                  Cancel
+                  Cancelar
                 </Button>
               </>
             ) : (
               <Button type="button" onClick={toggleEditMode}>
-                Edit
+                Editar
               </Button>
             )}
           </div>

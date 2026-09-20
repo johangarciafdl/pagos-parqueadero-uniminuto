@@ -2,7 +2,7 @@
 
 import { type Client, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { faqCreateFaqData, faqCreateFaqErrors, faqCreateFaqResponses, faqDeleteFaqData, faqDeleteFaqErrors, faqDeleteFaqResponses, faqListFaqData, faqListFaqErrors, faqListFaqResponses, faqUpdateFaqData, faqUpdateFaqErrors, faqUpdateFaqResponses, historyGetParkingLogData, historyGetParkingLogErrors, historyGetParkingLogResponses, historyGetPaymentHistoryData, historyGetPaymentHistoryErrors, historyGetPaymentHistoryResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, paymentsCreatePaymentData, paymentsCreatePaymentErrors, paymentsCreatePaymentResponses, paymentsGetPaymentData, paymentsGetPaymentErrors, paymentsGetPaymentResponses, paymentsListPaymentMethodsData, paymentsListPaymentMethodsResponses, paymentsListVehiclesWithPendingFeeData, paymentsListVehiclesWithPendingFeeResponses, plansCreatePlanData, plansCreatePlanErrors, plansCreatePlanResponses, plansListPlansData, plansListPlansResponses, plansMyActiveSubscriptionData, plansMyActiveSubscriptionResponses, plansUpdatePlanData, plansUpdatePlanErrors, plansUpdatePlanResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, supportCreateTicketData, supportCreateTicketErrors, supportCreateTicketResponses, supportListMyTicketsData, supportListMyTicketsResponses, supportUpdateTicketStatusData, supportUpdateTicketStatusErrors, supportUpdateTicketStatusResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses, vehiclesDeleteVehicleData, vehiclesDeleteVehicleErrors, vehiclesDeleteVehicleResponses, vehiclesListMyVehiclesData, vehiclesListMyVehiclesResponses, vehiclesListVehicleTypesData, vehiclesListVehicleTypesResponses, vehiclesRegisterVehicleData, vehiclesRegisterVehicleErrors, vehiclesRegisterVehicleResponses, webhooksWompiWebhookData, webhooksWompiWebhookResponses } from './types.gen';
+import type { faqCreateFaqData, faqCreateFaqErrors, faqCreateFaqResponses, faqDeleteFaqData, faqDeleteFaqErrors, faqDeleteFaqResponses, faqListFaqData, faqListFaqErrors, faqListFaqResponses, faqUpdateFaqData, faqUpdateFaqErrors, faqUpdateFaqResponses, historyGetParkingLogData, historyGetParkingLogErrors, historyGetParkingLogResponses, historyGetPaymentHistoryData, historyGetPaymentHistoryErrors, historyGetPaymentHistoryResponses, kioskMyQrData, kioskMyQrResponses, kioskRegenerateQrData, kioskRegenerateQrResponses, kioskRegisterData, kioskRegisterErrors, kioskRegisterResponses, kioskSessionByQrData, kioskSessionByQrErrors, kioskSessionByQrResponses, kioskSessionByStudentIdData, kioskSessionByStudentIdErrors, kioskSessionByStudentIdResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, paymentsCreatePaymentData, paymentsCreatePaymentErrors, paymentsCreatePaymentResponses, paymentsGetPaymentData, paymentsGetPaymentErrors, paymentsGetPaymentResponses, paymentsListPaymentMethodsData, paymentsListPaymentMethodsResponses, paymentsListVehiclesWithPendingFeeData, paymentsListVehiclesWithPendingFeeResponses, plansCreatePlanData, plansCreatePlanErrors, plansCreatePlanResponses, plansListPlansData, plansListPlansResponses, plansMyActiveSubscriptionData, plansMyActiveSubscriptionResponses, plansUpdatePlanData, plansUpdatePlanErrors, plansUpdatePlanResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, supportCreateTicketData, supportCreateTicketErrors, supportCreateTicketResponses, supportListMyTicketsData, supportListMyTicketsResponses, supportUpdateTicketStatusData, supportUpdateTicketStatusErrors, supportUpdateTicketStatusResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses, vehiclesDeleteVehicleData, vehiclesDeleteVehicleErrors, vehiclesDeleteVehicleResponses, vehiclesListMyVehiclesData, vehiclesListMyVehiclesResponses, vehiclesListVehicleTypesData, vehiclesListVehicleTypesResponses, vehiclesRegisterVehicleData, vehiclesRegisterVehicleErrors, vehiclesRegisterVehicleResponses, webhooksWompiWebhookData, webhooksWompiWebhookResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -91,6 +91,92 @@ export class LoginService {
             responseType: 'text',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/password-recovery-html-content/{email}',
+            ...options
+        });
+    }
+}
+
+export class KioskService {
+    /**
+     * Register
+     *
+     * Alta de un estudiante: sin contraseña, identificado por su ID.
+     *
+     * Devuelve el token de sesión y el qr_token (solo se entrega en claro esta
+     * vez; el QR generado con él es lo que el estudiante debe guardar para
+     * volver a entrar).
+     */
+    public static register<ThrowOnError extends boolean = true>(options: Options<kioskRegisterData, ThrowOnError>) {
+        return (options.client ?? client).post<kioskRegisterResponses, kioskRegisterErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/kiosk/register',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Session By Student Id
+     *
+     * Reingreso rápido con solo el ID de estudiante.
+     *
+     * Limitado por IP (misma protección que el login de administrador) porque,
+     * a diferencia del QR, un ID de estudiante puede ser adivinable.
+     */
+    public static sessionByStudentId<ThrowOnError extends boolean = true>(options: Options<kioskSessionByStudentIdData, ThrowOnError>) {
+        return (options.client ?? client).post<kioskSessionByStudentIdResponses, kioskSessionByStudentIdErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/kiosk/session',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Session By Qr
+     *
+     * Reingreso mediante el QR personal (token de alta entropía, no el ID).
+     */
+    public static sessionByQr<ThrowOnError extends boolean = true>(options: Options<kioskSessionByQrData, ThrowOnError>) {
+        return (options.client ?? client).post<kioskSessionByQrResponses, kioskSessionByQrErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/kiosk/qr-session',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * My Qr
+     */
+    public static myQr<ThrowOnError extends boolean = true>(options?: Options<kioskMyQrData, ThrowOnError>) {
+        return (options?.client ?? client).get<kioskMyQrResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/kiosk/my-qr',
+            ...options
+        });
+    }
+    
+    /**
+     * Regenerate Qr
+     *
+     * Invalida el QR anterior (por si se perdió/compartió) y genera uno nuevo.
+     */
+    public static regenerateQr<ThrowOnError extends boolean = true>(options?: Options<kioskRegenerateQrData, ThrowOnError>) {
+        return (options?.client ?? client).post<kioskRegenerateQrResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/kiosk/regenerate-qr',
             ...options
         });
     }
@@ -185,23 +271,6 @@ export class UsersService {
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
             url: '/api/v1/users/me/password',
-            ...options,
-            headers: {
-                'Content-Type': 'application/json',
-                ...options.headers
-            }
-        });
-    }
-    
-    /**
-     * Register User
-     *
-     * Create new user without the need to be logged in.
-     */
-    public static registerUser<ThrowOnError extends boolean = true>(options: Options<usersRegisterUserData, ThrowOnError>) {
-        return (options.client ?? client).post<usersRegisterUserResponses, usersRegisterUserErrors, ThrowOnError>({
-            responseType: 'json',
-            url: '/api/v1/users/signup',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

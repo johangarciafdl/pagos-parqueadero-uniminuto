@@ -12,7 +12,7 @@ export type UserTableData = UserPublic & {
 export const columns: ColumnDef<UserTableData>[] = [
   {
     accessorKey: "full_name",
-    header: "Full Name",
+    header: "Nombre",
     cell: ({ row }) => {
       const fullName = row.original.full_name
       return (
@@ -24,7 +24,7 @@ export const columns: ColumnDef<UserTableData>[] = [
           </span>
           {row.original.isCurrentUser && (
             <Badge variant="outline" className="text-xs">
-              You
+              Tú
             </Badge>
           )}
         </div>
@@ -32,24 +32,33 @@ export const columns: ColumnDef<UserTableData>[] = [
     },
   },
   {
-    accessorKey: "email",
-    header: "Email",
+    accessorKey: "student_id",
+    header: "ID estudiante",
     cell: ({ row }) => (
-      <span className="text-muted-foreground">{row.original.email}</span>
+      <span className="text-muted-foreground">
+        {row.original.student_id ?? "—"}
+      </span>
+    ),
+  },
+  {
+    accessorKey: "email",
+    header: "Correo",
+    cell: ({ row }) => (
+      <span className="text-muted-foreground">{row.original.email ?? "—"}</span>
     ),
   },
   {
     accessorKey: "is_superuser",
-    header: "Role",
+    header: "Rol",
     cell: ({ row }) => (
       <Badge variant={row.original.is_superuser ? "default" : "secondary"}>
-        {row.original.is_superuser ? "Superuser" : "User"}
+        {row.original.is_superuser ? "Administrador" : "Estudiante"}
       </Badge>
     ),
   },
   {
     accessorKey: "is_active",
-    header: "Status",
+    header: "Estado",
     cell: ({ row }) => (
       <div className="flex items-center gap-2">
         <span
@@ -59,7 +68,7 @@ export const columns: ColumnDef<UserTableData>[] = [
           )}
         />
         <span className={row.original.is_active ? "" : "text-muted-foreground"}>
-          {row.original.is_active ? "Active" : "Inactive"}
+          {row.original.is_active ? "Activo" : "Inactivo"}
         </span>
       </div>
     ),

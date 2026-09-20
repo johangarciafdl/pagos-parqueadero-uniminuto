@@ -129,6 +129,44 @@ export type HTTPValidationError = {
 };
 
 /**
+ * KioskRegister
+ *
+ * Alta de un estudiante: sin contraseña, solo su ID y nombre.
+ */
+export type KioskRegister = {
+    /**
+     * Student Id
+     */
+    student_id: string;
+    /**
+     * Full Name
+     */
+    full_name: string;
+};
+
+/**
+ * KioskRegisterResponse
+ */
+export type KioskRegisterResponse = {
+    token: Token;
+    /**
+     * Qr Token
+     */
+    qr_token: string;
+    user: UserPublic;
+};
+
+/**
+ * KioskSession
+ */
+export type KioskSession = {
+    /**
+     * Student Id
+     */
+    student_id: string;
+};
+
+/**
  * Message
  */
 export type Message = {
@@ -484,6 +522,16 @@ export type PrivateUserCreate = {
 };
 
 /**
+ * QRSession
+ */
+export type QRSession = {
+    /**
+     * Qr Token
+     */
+    qr_token: string;
+};
+
+/**
  * SubscriptionPublic
  */
 export type SubscriptionPublic = {
@@ -610,6 +658,8 @@ export type UpdatePassword = {
 
 /**
  * UserCreate
+ *
+ * Solo para cuentas administradas (superusuario / admin), con contraseña.
  */
 export type UserCreate = {
     /**
@@ -643,17 +693,21 @@ export type UserCreate = {
  */
 export type UserPublic = {
     /**
+     * Id
+     */
+    id: string;
+    /**
      * Email
      */
-    email: string;
+    email?: string | null;
     /**
      * Is Active
      */
-    is_active?: boolean;
+    is_active: boolean;
     /**
      * Is Superuser
      */
-    is_superuser?: boolean;
+    is_superuser: boolean;
     /**
      * Full Name
      */
@@ -663,35 +717,9 @@ export type UserPublic = {
      */
     student_id?: string | null;
     /**
-     * Id
-     */
-    id: string;
-    /**
      * Created At
      */
     created_at?: string | null;
-};
-
-/**
- * UserRegister
- */
-export type UserRegister = {
-    /**
-     * Email
-     */
-    email: string;
-    /**
-     * Password
-     */
-    password: string;
-    /**
-     * Full Name
-     */
-    full_name?: string | null;
-    /**
-     * Student Id
-     */
-    student_id: string;
 };
 
 /**
@@ -728,10 +756,6 @@ export type UserUpdateMe = {
      * Full Name
      */
     full_name?: string | null;
-    /**
-     * Email
-     */
-    email?: string | null;
 };
 
 /**
@@ -978,6 +1002,121 @@ export type loginRecoverPasswordHtmlContentResponses = {
 
 export type loginRecoverPasswordHtmlContentResponse = loginRecoverPasswordHtmlContentResponses[keyof loginRecoverPasswordHtmlContentResponses];
 
+export type kioskRegisterData = {
+    body: KioskRegister;
+    path?: never;
+    query?: never;
+    url: '/api/v1/kiosk/register';
+};
+
+export type kioskRegisterErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type kioskRegisterError = kioskRegisterErrors[keyof kioskRegisterErrors];
+
+export type kioskRegisterResponses = {
+    /**
+     * Successful Response
+     */
+    200: KioskRegisterResponse;
+};
+
+export type kioskRegisterResponse = kioskRegisterResponses[keyof kioskRegisterResponses];
+
+export type kioskSessionByStudentIdData = {
+    body: KioskSession;
+    path?: never;
+    query?: never;
+    url: '/api/v1/kiosk/session';
+};
+
+export type kioskSessionByStudentIdErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type kioskSessionByStudentIdError = kioskSessionByStudentIdErrors[keyof kioskSessionByStudentIdErrors];
+
+export type kioskSessionByStudentIdResponses = {
+    /**
+     * Successful Response
+     */
+    200: Token;
+};
+
+export type kioskSessionByStudentIdResponse = kioskSessionByStudentIdResponses[keyof kioskSessionByStudentIdResponses];
+
+export type kioskSessionByQrData = {
+    body: QRSession;
+    path?: never;
+    query?: never;
+    url: '/api/v1/kiosk/qr-session';
+};
+
+export type kioskSessionByQrErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type kioskSessionByQrError = kioskSessionByQrErrors[keyof kioskSessionByQrErrors];
+
+export type kioskSessionByQrResponses = {
+    /**
+     * Successful Response
+     */
+    200: Token;
+};
+
+export type kioskSessionByQrResponse = kioskSessionByQrResponses[keyof kioskSessionByQrResponses];
+
+export type kioskMyQrData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/kiosk/my-qr';
+};
+
+export type kioskMyQrResponses = {
+    /**
+     * Response Kiosk-My Qr
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type kioskMyQrResponse = kioskMyQrResponses[keyof kioskMyQrResponses];
+
+export type kioskRegenerateQrData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/kiosk/regenerate-qr';
+};
+
+export type kioskRegenerateQrResponses = {
+    /**
+     * Response Kiosk-Regenerate Qr
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type kioskRegenerateQrResponse = kioskRegenerateQrResponses[keyof kioskRegenerateQrResponses];
+
 export type usersReadUsersData = {
     body?: never;
     path?: never;
@@ -1118,31 +1257,6 @@ export type usersUpdatePasswordMeResponses = {
 };
 
 export type usersUpdatePasswordMeResponse = usersUpdatePasswordMeResponses[keyof usersUpdatePasswordMeResponses];
-
-export type usersRegisterUserData = {
-    body: UserRegister;
-    path?: never;
-    query?: never;
-    url: '/api/v1/users/signup';
-};
-
-export type usersRegisterUserErrors = {
-    /**
-     * Validation Error
-     */
-    422: HTTPValidationError;
-};
-
-export type usersRegisterUserError = usersRegisterUserErrors[keyof usersRegisterUserErrors];
-
-export type usersRegisterUserResponses = {
-    /**
-     * Successful Response
-     */
-    200: UserPublic;
-};
-
-export type usersRegisterUserResponse = usersRegisterUserResponses[keyof usersRegisterUserResponses];
 
 export type usersDeleteUserData = {
     body?: never;

@@ -3,9 +3,13 @@ import { useNavigate } from "@tanstack/react-router"
 
 import {
   type Body_login_login_access_token as AccessToken,
+  KioskService,
+  type KioskRegister,
+  type KioskRegisterResponse,
+  type KioskSession,
   LoginService,
+  type QRSession,
   type UserPublic,
-  type UserRegister,
   UsersService,
 } from "@/client"
 import { handleError } from "@/utils"
@@ -26,18 +30,49 @@ const useAuth = () => {
     enabled: isLoggedIn(),
   })
 
-  const signUpMutation = useMutation({
-    mutationFn: (data: UserRegister) =>
-      UsersService.registerUser({ body: data }),
-    onSuccess: () => {
-      navigate({ to: "/login" })
+  // Registro de estudiante: sin contraseña, solo ID + nombre. El backend
+  // devuelve de una vez el token de sesión y el qr_token para mostrarlo.
+  const kioskRegisterMutation = useMutation({
+    mutationFn: async (data: KioskRegister) => {
+      const { data: result } = await KioskService.register({ body: data })
+      return result as KioskRegisterResponse
+    },
+    onSuccess: (result) => {
+      localStorage.setItem("access_token", result.token.access_token)
+      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
     },
     onError: handleError.bind(showErrorToast),
-    onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["users"] })
-    },
   })
 
+  // Reingreso rápido con el ID de estudiante (limitado por intentos).
+  const kioskSessionMutation = useMutation({
+    mutationFn: async (data: KioskSession) => {
+      const { data: token } = await KioskService.sessionByStudentId({ body: data })
+      return token
+    },
+    onSuccess: (token) => {
+      if (!token) return
+      localStorage.setItem("access_token", token.access_token)
+      navigate({ to: "/" })
+    },
+    onError: handleError.bind(showErrorToast),
+  })
+
+  // Reingreso escaneando el QR personal (token de alta entropía).
+  const qrSessionMutation = useMutation({
+    mutationFn: async (data: QRSession) => {
+      const { data: token } = await KioskService.sessionByQr({ body: data })
+      return token
+    },
+    onSuccess: (token) => {
+      if (!token) return
+      localStorage.setItem("access_token", token.access_token)
+      navigate({ to: "/" })
+    },
+    onError: handleError.bind(showErrorToast),
+  })
+
+  // Login con correo/contraseña: reservado para el administrador.
   const login = async (data: AccessToken) => {
     const response = await LoginService.loginAccessToken({
       body: data,
@@ -59,7 +94,9 @@ const useAuth = () => {
   }
 
   return {
-    signUpMutation,
+    kioskRegisterMutation,
+    kioskSessionMutation,
+    qrSessionMutation,
     loginMutation,
     logout,
     user,

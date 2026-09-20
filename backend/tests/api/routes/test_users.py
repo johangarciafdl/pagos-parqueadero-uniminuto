@@ -9,12 +9,7 @@ from app.core.config import settings
 from app.core.security import verify_password
 from app.models import User, UserCreate
 from tests.utils.user import create_random_user
-from tests.utils.utils import (
-    random_email,
-    random_institutional_email,
-    random_lower_string,
-    random_student_id,
-)
+from tests.utils.utils import random_email, random_lower_string
 
 
 def test_get_users_superuser_me(
@@ -207,8 +202,7 @@ def test_update_user_me(
     client: TestClient, normal_user_token_headers: dict[str, str], db: Session
 ) -> None:
     full_name = "Updated Name"
-    email = random_email()
-    data = {"full_name": full_name, "email": email}
+    data = {"full_name": full_name}
     r = client.patch(
         f"{settings.API_V1_STR}/users/me",
         headers=normal_user_token_headers,
@@ -216,13 +210,11 @@ def test_update_user_me(
     )
     assert r.status_code == 200
     updated_user = r.json()
-    assert updated_user["email"] == email
     assert updated_user["full_name"] == full_name
 
-    user_query = select(User).where(User.email == email)
+    user_query = select(User).where(User.email == settings.EMAIL_TEST_USER)
     user_db = db.exec(user_query).first()
     assert user_db
-    assert user_db.email == email
     assert user_db.full_name == full_name
 
 
@@ -284,24 +276,6 @@ def test_update_password_me_incorrect_password(
     assert updated_user["detail"] == "Incorrect password"
 
 
-def test_update_user_me_email_exists(
-    client: TestClient, normal_user_token_headers: dict[str, str], db: Session
-) -> None:
-    username = random_email()
-    password = random_lower_string()
-    user_in = UserCreate(email=username, password=password)
-    user = crud.create_user(session=db, user_create=user_in)
-
-    data = {"email": user.email}
-    r = client.patch(
-        f"{settings.API_V1_STR}/users/me",
-        headers=normal_user_token_headers,
-        json=data,
-    )
-    assert r.status_code == 409
-    assert r.json()["detail"] == "User with this email already exists"
-
-
 def test_update_password_me_same_password_error(
     client: TestClient, superuser_token_headers: dict[str, str]
 ) -> None:
@@ -319,65 +293,6 @@ def test_update_password_me_same_password_error(
     assert (
         updated_user["detail"] == "New password cannot be the same as the current one"
     )
-
-
-def test_register_user(client: TestClient, db: Session) -> None:
-    username = random_institutional_email()
-    password = random_lower_string()
-    full_name = random_lower_string()
-    student_id = random_student_id()
-    data = {
-        "email": username,
-        "password": password,
-        "full_name": full_name,
-        "student_id": student_id,
-    }
-    r = client.post(
-        f"{settings.API_V1_STR}/users/signup",
-        json=data,
-    )
-    assert r.status_code == 200
-    created_user = r.json()
-    assert created_user["email"] == username
-    assert created_user["full_name"] == full_name
-
-    user_query = select(User).where(User.email == username)
-    user_db = db.exec(user_query).first()
-    assert user_db
-    assert user_db.email == username
-    assert user_db.full_name == full_name
-    verified, _ = verify_password(password, user_db.hashed_password)
-    assert verified
-
-
-def test_register_user_already_exists_error(client: TestClient) -> None:
-    email = random_institutional_email()
-    data = {
-        "email": email,
-        "password": random_lower_string(),
-        "full_name": random_lower_string(),
-        "student_id": random_student_id(),
-    }
-    first = client.post(f"{settings.API_V1_STR}/users/signup", json=data)
-    assert first.status_code == 200
-
-    r = client.post(
-        f"{settings.API_V1_STR}/users/signup",
-        json={**data, "student_id": random_student_id()},
-    )
-    assert r.status_code == 400
-    assert r.json()["detail"] == "The user with this email already exists in the system"
-
-
-def test_register_user_non_institutional_email_error(client: TestClient) -> None:
-    data = {
-        "email": random_email(),
-        "password": random_lower_string(),
-        "full_name": random_lower_string(),
-        "student_id": random_student_id(),
-    }
-    r = client.post(f"{settings.API_V1_STR}/users/signup", json=data)
-    assert r.status_code == 422
 
 
 def test_update_user(

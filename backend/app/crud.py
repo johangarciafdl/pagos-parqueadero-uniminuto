@@ -1,9 +1,10 @@
+import secrets
 from typing import Any
 
 from sqlmodel import Session, select
 
 from app.core.security import get_password_hash, verify_password
-from app.models import User, UserCreate, UserUpdate
+from app.models import KioskRegister, User, UserCreate, UserUpdate
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -14,6 +15,34 @@ def create_user(*, session: Session, user_create: UserCreate) -> User:
     session.commit()
     session.refresh(db_obj)
     return db_obj
+
+
+def _generate_unique_qr_token(session: Session) -> str:
+    for _ in range(5):
+        token = secrets.token_urlsafe(32)
+        if not session.exec(select(User).where(User.qr_token == token)).first():
+            return token
+    raise RuntimeError("No se pudo generar un qr_token único")
+
+
+def create_kiosk_user(*, session: Session, data: KioskRegister) -> User:
+    db_obj = User(
+        student_id=data.student_id,
+        full_name=data.full_name,
+        qr_token=_generate_unique_qr_token(session),
+    )
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    return db_obj
+
+
+def regenerate_qr_token(*, session: Session, user: User) -> User:
+    user.qr_token = _generate_unique_qr_token(session)
+    session.add(user)
+    session.commit()
+    session.refresh(user)
+    return user
 
 
 def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
@@ -32,8 +61,17 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
 
 def get_user_by_email(*, session: Session, email: str) -> User | None:
     statement = select(User).where(User.email == email)
-    session_user = session.exec(statement).first()
-    return session_user
+    return session.exec(statement).first()
+
+
+def get_user_by_student_id(*, session: Session, student_id: str) -> User | None:
+    statement = select(User).where(User.student_id == student_id)
+    return session.exec(statement).first()
+
+
+def get_user_by_qr_token(*, session: Session, qr_token: str) -> User | None:
+    statement = select(User).where(User.qr_token == qr_token)
+    return session.exec(statement).first()
 
 
 # Dummy hash to use for timing attack prevention when user is not found
@@ -43,7 +81,7 @@ DUMMY_HASH = "$argon2id$v=19$m=65536,t=3,p=4$MjQyZWE1MzBjYjJlZTI0Yw$YTU4NGM5ZTZm
 
 def authenticate(*, session: Session, email: str, password: str) -> User | None:
     db_user = get_user_by_email(session=session, email=email)
-    if not db_user:
+    if not db_user or db_user.hashed_password is None:
         # Prevent timing attacks by running password verification even when user doesn't exist
         # This ensures the response time is similar whether or not the email exists
         verify_password(password, DUMMY_HASH)

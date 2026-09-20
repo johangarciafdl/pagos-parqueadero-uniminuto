@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, date, datetime
 from enum import StrEnum
 
-from pydantic import EmailStr, field_validator
+from pydantic import EmailStr
 from sqlalchemy import DateTime
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -15,39 +15,42 @@ def get_datetime_utc() -> datetime:
 # Users (auth) — reutilizado del template, solo se quita la relación con Item
 # ---------------------------------------------------------------------------
 
-# Dominio institucional de UNIMINUTO. Solo se exige en el auto-registro
-# público (UserRegister): un superusuario administrador (creado por seed o
-# por otro admin vía UserCreate) puede seguir usando cualquier correo.
-INSTITUTIONAL_EMAIL_DOMAIN = "@uniminuto.edu.co"
-
-
+# La sesión de un estudiante se identifica por su ID/carné (sin contraseña),
+# pensado para un flujo de kiosco: escribes tu ID (o escaneas tu QR) y ya
+# tienes acceso a pago/planes/historial/soporte. El correo+contraseña se deja
+# reservado para el administrador (permisos elevados, sí requiere contraseña).
 class UserBase(SQLModel):
-    email: EmailStr = Field(unique=True, index=True, max_length=255)
+    email: EmailStr | None = Field(
+        default=None, unique=True, index=True, max_length=255
+    )
     is_active: bool = True
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
-    student_id: str | None = Field(default=None, max_length=20)
+    student_id: str | None = Field(
+        default=None, unique=True, index=True, max_length=20
+    )
 
 
 class UserCreate(UserBase):
+    """Solo para cuentas administradas (superusuario / admin), con contraseña."""
+
+    email: EmailStr = Field(unique=True, index=True, max_length=255)
     password: str = Field(min_length=8, max_length=128)
 
 
-class UserRegister(SQLModel):
-    email: EmailStr = Field(max_length=255)
-    password: str = Field(min_length=8, max_length=128)
-    full_name: str | None = Field(default=None, max_length=255)
+class KioskRegister(SQLModel):
+    """Alta de un estudiante: sin contraseña, solo su ID y nombre."""
+
+    student_id: str = Field(min_length=1, max_length=20)
+    full_name: str = Field(min_length=1, max_length=255)
+
+
+class KioskSession(SQLModel):
     student_id: str = Field(min_length=1, max_length=20)
 
-    @field_validator("email")
-    @classmethod
-    def _must_be_institutional_email(cls, value: str) -> str:
-        if not value.lower().endswith(INSTITUTIONAL_EMAIL_DOMAIN):
-            raise ValueError(
-                f"Debes registrarte con tu correo institucional "
-                f"({INSTITUTIONAL_EMAIL_DOMAIN})"
-            )
-        return value
+
+class QRSession(SQLModel):
+    qr_token: str = Field(min_length=1, max_length=64)
 
 
 class UserUpdate(SQLModel):
@@ -60,7 +63,6 @@ class UserUpdate(SQLModel):
 
 class UserUpdateMe(SQLModel):
     full_name: str | None = Field(default=None, max_length=255)
-    email: EmailStr | None = Field(default=None, max_length=255)
 
 
 class UpdatePassword(SQLModel):
@@ -70,7 +72,12 @@ class UpdatePassword(SQLModel):
 
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    hashed_password: str
+    hashed_password: str | None = Field(default=None)
+    # Token secreto de alta entropía (no el student_id, que puede ser
+    # adivinable) codificado en el QR del estudiante para reingresar.
+    qr_token: str | None = Field(
+        default=None, unique=True, index=True, max_length=64
+    )
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
@@ -85,8 +92,13 @@ class User(UserBase, table=True):
     )
 
 
-class UserPublic(UserBase):
+class UserPublic(SQLModel):
     id: uuid.UUID
+    email: EmailStr | None = None
+    is_active: bool
+    is_superuser: bool
+    full_name: str | None = None
+    student_id: str | None = None
     created_at: datetime | None = None
 
 
@@ -457,6 +469,12 @@ class Message(SQLModel):
 class Token(SQLModel):
     access_token: str
     token_type: str = "bearer"
+
+
+class KioskRegisterResponse(SQLModel):
+    token: Token
+    qr_token: str
+    user: UserPublic
 
 
 class TokenPayload(SQLModel):

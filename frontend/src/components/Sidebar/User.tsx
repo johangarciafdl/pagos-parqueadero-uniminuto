@@ -21,30 +21,38 @@ import { getInitials } from "@/utils"
 
 interface UserInfoProps {
   fullName?: string
-  email?: string
+  subtitle?: string
 }
 
-function UserInfo({ fullName, email }: UserInfoProps) {
+function UserInfo({ fullName, subtitle }: UserInfoProps) {
   return (
     <div className="flex items-center gap-2.5 w-full min-w-0">
       <Avatar className="size-8">
         <AvatarFallback className="bg-zinc-600 text-white">
-          {getInitials(fullName || "User")}
+          {getInitials(fullName || "Usuario")}
         </AvatarFallback>
       </Avatar>
       <div className="flex flex-col items-start min-w-0">
         <p className="text-sm font-medium truncate w-full">{fullName}</p>
-        <p className="text-xs text-muted-foreground truncate w-full">{email}</p>
+        <p className="text-xs text-muted-foreground truncate w-full">{subtitle}</p>
       </div>
     </div>
   )
 }
 
-export function User({ user }: { user: any }) {
+interface SidebarUser {
+  full_name?: string | null
+  email?: string | null
+  student_id?: string | null
+}
+
+export function User({ user }: { user: SidebarUser | null | undefined }) {
   const { logout } = useAuth()
   const { isMobile, setOpenMobile } = useSidebar()
 
   if (!user) return null
+
+  const subtitle = user.student_id ? `ID: ${user.student_id}` : (user.email ?? undefined)
 
   const handleMenuClick = () => {
     if (isMobile) {
@@ -65,7 +73,7 @@ export function User({ user }: { user: any }) {
               className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
               data-testid="user-menu"
             >
-              <UserInfo fullName={user?.full_name} email={user?.email} />
+              <UserInfo fullName={user?.full_name ?? undefined} subtitle={subtitle} />
               <ChevronsUpDown className="ml-auto size-4 text-muted-foreground" />
             </SidebarMenuButton>
           </DropdownMenuTrigger>
@@ -76,18 +84,18 @@ export function User({ user }: { user: any }) {
             sideOffset={4}
           >
             <DropdownMenuLabel className="p-0 font-normal">
-              <UserInfo fullName={user?.full_name} email={user?.email} />
+              <UserInfo fullName={user?.full_name ?? undefined} subtitle={subtitle} />
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <RouterLink to="/settings" onClick={handleMenuClick}>
               <DropdownMenuItem>
                 <Settings />
-                User Settings
+                Ajustes
               </DropdownMenuItem>
             </RouterLink>
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut />
-              Log Out
+              Cerrar sesión
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

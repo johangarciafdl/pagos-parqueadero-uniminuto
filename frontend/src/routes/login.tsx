@@ -1,142 +1,194 @@
-import { zodResolver } from "@hookform/resolvers/zod"
 import {
   createFileRoute,
   Link as RouterLink,
   redirect,
+  useNavigate,
 } from "@tanstack/react-router"
-import { useForm } from "react-hook-form"
-import { z } from "zod"
+import { AnimatePresence, motion } from "motion/react"
+import { useState } from "react"
 
-import type { Body_login_login_access_token as AccessToken } from "@/client"
 import { AuthLayout } from "@/components/Common/AuthLayout"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
+import { QRDisplay } from "@/components/Kiosk/QRDisplay"
+import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { LoadingButton } from "@/components/ui/loading-button"
-import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
 
-const formSchema = z.object({
-  username: z.email({ message: "Invalid email address" }),
-  password: z
-    .string()
-    .min(1, { message: "Password is required" })
-    .min(8, { message: "Password must be at least 8 characters" }),
-}) satisfies z.ZodType<AccessToken>
-
-type FormData = z.infer<typeof formSchema>
-
 export const Route = createFileRoute("/login")({
-  component: Login,
+  component: Kiosk,
   beforeLoad: async () => {
     if (isLoggedIn()) {
-      throw redirect({
-        to: "/",
-      })
+      throw redirect({ to: "/" })
     }
   },
   head: () => ({
-    meta: [
-      {
-        title: "Iniciar sesión - Parqueadero UNIMINUTO",
-      },
-    ],
+    meta: [{ title: "Parqueadero UNIMINUTO" }],
   }),
 })
 
-function Login() {
-  const { loginMutation } = useAuth()
-  const form = useForm<FormData>({
-    resolver: zodResolver(formSchema),
-    mode: "onBlur",
-    criteriaMode: "all",
-    defaultValues: {
-      username: "",
-      password: "",
-    },
-  })
+type Mode = "enter" | "register" | "show-qr"
 
-  const onSubmit = (data: FormData) => {
-    if (loginMutation.isPending) return
-    loginMutation.mutate(data)
+const fadeSlide = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  exit: { opacity: 0, y: -8 },
+  transition: { duration: 0.2, ease: "easeOut" as const },
+}
+
+function Kiosk() {
+  const navigate = useNavigate()
+  const { kioskSessionMutation, kioskRegisterMutation } = useAuth()
+  const [mode, setMode] = useState<Mode>("enter")
+  const [studentId, setStudentId] = useState("")
+  const [fullName, setFullName] = useState("")
+  const [qrToken, setQrToken] = useState("")
+
+  const handleEnter = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!studentId.trim()) return
+    kioskSessionMutation.mutate({ student_id: studentId.trim() })
+  }
+
+  const handleRegister = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!studentId.trim() || !fullName.trim()) return
+    kioskRegisterMutation.mutate(
+      { student_id: studentId.trim(), full_name: fullName.trim() },
+      {
+        onSuccess: (result) => {
+          setQrToken(result.qr_token)
+          setMode("show-qr")
+        },
+      },
+    )
   }
 
   return (
     <AuthLayout>
-      <Form {...form}>
-        <form
-          onSubmit={form.handleSubmit(onSubmit)}
-          className="flex flex-col gap-6"
-        >
-          <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-2xl font-bold">Inicia sesión en tu cuenta</h1>
-          </div>
+      <AnimatePresence mode="wait">
+        {mode === "enter" && (
+          <motion.div key="enter" {...fadeSlide} className="flex flex-col gap-6">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <h1 className="text-2xl font-bold">Parqueadero UNIMINUTO</h1>
+              <p className="text-muted-foreground text-sm">
+                Ingresa con tu ID de estudiante o escanea tu QR
+              </p>
+            </div>
+            <form onSubmit={handleEnter} className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="student_id">ID / carné de estudiante</Label>
+                <Input
+                  id="student_id"
+                  placeholder="Ej. 0000123456"
+                  autoFocus
+                  value={studentId}
+                  onChange={(e) => setStudentId(e.target.value)}
+                />
+              </div>
+              <LoadingButton
+                type="submit"
+                loading={kioskSessionMutation.isPending}
+              >
+                Ingresar
+              </LoadingButton>
+            </form>
+            <div className="text-center text-sm">
+              ¿Primera vez aquí?{" "}
+              <button
+                type="button"
+                className="underline underline-offset-4"
+                onClick={() => setMode("register")}
+              >
+                Regístrate
+              </button>
+            </div>
+          </motion.div>
+        )}
 
-          <div className="grid gap-4">
-            <FormField
-              control={form.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Correo institucional</FormLabel>
-                  <FormControl>
-                    <Input
-                      data-testid="email-input"
-                      placeholder="usuario@uniminuto.edu.co"
-                      type="email"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
+        {mode === "register" && (
+          <motion.div key="register" {...fadeSlide} className="flex flex-col gap-6">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <h1 className="text-2xl font-bold">Crear cuenta</h1>
+              <p className="text-muted-foreground text-sm">
+                Solo necesitas tu ID de estudiante y tu nombre
+              </p>
+            </div>
+            <form onSubmit={handleRegister} className="grid gap-4">
+              <div className="grid gap-2">
+                <Label htmlFor="new_full_name">Nombre completo</Label>
+                <Input
+                  id="new_full_name"
+                  placeholder="Nombre y apellido"
+                  autoFocus
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="new_student_id">ID / carné de estudiante</Label>
+                <Input
+                  id="new_student_id"
+                  placeholder="Ej. 0000123456"
+                  value={studentId}
+                  onChange={(e) => setStudentId(e.target.value)}
+                />
+              </div>
+              <LoadingButton
+                type="submit"
+                loading={kioskRegisterMutation.isPending}
+              >
+                Crear cuenta
+              </LoadingButton>
+            </form>
+            <div className="text-center text-sm">
+              ¿Ya tienes cuenta?{" "}
+              <button
+                type="button"
+                className="underline underline-offset-4"
+                onClick={() => setMode("enter")}
+              >
+                Ingresa aquí
+              </button>
+            </div>
+          </motion.div>
+        )}
 
-            <FormField
-              control={form.control}
-              name="password"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="flex items-center">
-                    <FormLabel>Contraseña</FormLabel>
-                    <RouterLink
-                      to="/recover-password"
-                      className="ml-auto text-sm underline-offset-4 hover:underline"
-                    >
-                      ¿Olvidaste tu contraseña?
-                    </RouterLink>
-                  </div>
-                  <FormControl>
-                    <PasswordInput
-                      data-testid="password-input"
-                      placeholder="Contraseña"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage className="text-xs" />
-                </FormItem>
-              )}
-            />
-
-            <LoadingButton type="submit" loading={loginMutation.isPending}>
-              Iniciar sesión
-            </LoadingButton>
-          </div>
-
-          <div className="text-center text-sm">
-            ¿No tienes cuenta?{" "}
-            <RouterLink to="/signup" className="underline underline-offset-4">
-              Regístrate
-            </RouterLink>
-          </div>
-        </form>
-      </Form>
+        {mode === "show-qr" && (
+          <motion.div
+            key="show-qr"
+            {...fadeSlide}
+            className="flex flex-col items-center gap-6 text-center"
+          >
+            <div className="flex flex-col items-center gap-2">
+              <h1 className="text-2xl font-bold">¡Cuenta creada!</h1>
+              <p className="text-muted-foreground text-sm">
+                Guarda este código QR: te sirve para volver a entrar sin
+                escribir tu ID.
+              </p>
+            </div>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.25, delay: 0.1 }}
+              className="rounded-lg border p-4"
+            >
+              <QRDisplay value={qrToken} />
+            </motion.div>
+            <Button className="w-full" onClick={() => navigate({ to: "/" })}>
+              Continuar
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+      {mode !== "show-qr" && (
+        <p className="text-muted-foreground mt-6 text-center text-xs">
+          Personal del parqueadero:{" "}
+          <RouterLink to="/staff" className="underline underline-offset-4">
+            acceso administrador
+          </RouterLink>
+        </p>
+      )}
     </AuthLayout>
   )
 }
