@@ -2,6 +2,19 @@
 
 **Input**: `./spec.md`, `./plan.md` | **Plazo**: 7 días
 
+## Cambio de arquitectura post-MVP: autenticación por ID + QR (reemplaza FR-001)
+
+El login mock por correo institucional (Día 1-6) se reemplazó por una sesión sin
+contraseña identificada por el ID/carné del estudiante, con un QR persistente
+(token de alta entropía, no el ID en texto plano) para reingresar. Motivo: un
+login por Microsoft/UWallet real requiere que un administrador de TI de la
+universidad registre la aplicación en el tenant de Azure/Entra — algo fuera del
+alcance de un estudiante — y el correo+contraseña propio no representa ninguna
+identidad institucional real. El login por correo/contraseña se mantiene *solo*
+para el administrador (`/staff`). Ver `backend/app/api/routes/kiosk.py` y
+`frontend/src/routes/login.tsx`. Verificado end-to-end en producción real
+(Render + Neon): registro → QR → reingreso por ID → reingreso por QR.
+
 ## Día 1 — Setup + Foundational
 
 - [x] T001 Postgres real levantado (contenedor local); pendiente probar el `compose.yml`
