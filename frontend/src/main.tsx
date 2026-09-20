@@ -28,9 +28,31 @@ const handleApiError = (error: Error) => {
     window.location.href = "/login"
   }
 }
+
+// El token puede quedar apuntando a un usuario que ya no existe (p. ej. tras
+// resembrar la base de datos): el backend responde 404 en /users/me en vez
+// de 401/403. Solo para ESA consulta puntual tratamos el 404 como sesión
+// inválida, para no forzar logout ante cualquier 404 normal de la app
+// (un plan no encontrado, un ID de estudiante inexistente, etc).
+const handleCurrentUserError = (error: Error, query: { queryKey: unknown }) => {
+  const isCurrentUserQuery =
+    Array.isArray(query.queryKey) && query.queryKey[0] === "currentUser"
+  if (
+    isCurrentUserQuery &&
+    error instanceof AxiosError &&
+    error.response?.status === 404
+  ) {
+    localStorage.removeItem("access_token")
+    window.location.href = "/login"
+  }
+}
+
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
-    onError: handleApiError,
+    onError: (error, query) => {
+      handleApiError(error)
+      handleCurrentUserError(error, query)
+    },
   }),
   mutationCache: new MutationCache({
     onError: handleApiError,
