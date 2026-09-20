@@ -7,7 +7,7 @@ services:
     dockerContext: .
     # Corre migraciones + siembra de catalogos/superusuario antes de
     # levantar el servidor, en cada deploy (backend/scripts/prestart.sh).
-    dockerCommand: bash scripts/prestart.sh && fastapi run --workers 4
+    dockerCommand: bash scripts/prestart.sh && fastapi run --host 0.0.0.0 --port $PORT --workers 4
     healthCheckPath: /api/v1/utils/health-check/
     envVars:
       - key: PROJECT_NAME
