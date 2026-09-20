@@ -111,15 +111,45 @@ semilla de ejemplo para planes/FAQ.
 
 ## Día 7 — Despliegue
 
-- [ ] T028 Provisionar Postgres gestionado (Neon/Supabase) y correr migraciones Alembic contra
-      esa base.
-- [ ] T029 Desplegar backend + frontend en Render/Railway, variables de entorno vía el panel del
-      proveedor (nunca en el repo).
-- [ ] T030 Cambiar llaves de Wompi de sandbox a las reales solo si ya se validó el flujo completo
-      en sandbox desplegado.
-- [ ] T031 Prueba end-to-end en el ambiente desplegado: pago, plan, historial, soporte.
+- [x] T028 Postgres gestionado en **Neon**. Migraciones Alembic aplicadas y catálogos/tarifas/
+      superusuario sembrados contra la base real (verificado consultando las tablas directamente).
+- [x] T029 Backend + frontend desplegados en **Render** como un solo servicio Docker:
+      https://parqueadero-uniminuto.onrender.com — variables de entorno puestas en el dashboard
+      de Render (`DATABASE_URL`, credenciales del superusuario, llaves de Wompi), nunca en el repo.
+      `render.yaml` versionado en la raíz del proyecto para reproducir la configuración.
+- [x] T030 Llaves de Wompi **sandbox** reales (no placeholders) configuradas; URL de eventos del
+      webhook registrada en el dashboard de Wompi apuntando a
+      `https://parqueadero-uniminuto.onrender.com/api/v1/webhooks/wompi`.
+- [x] T031 Prueba end-to-end en producción real: `/api/v1/utils/health-check/` → 200, frontend
+      (`/`) → 200, `GET /vehicles/types` devuelve las tarifas reales desde Neon, login con el
+      superusuario real devuelve un token válido. Planes/historial/soporte comparten el mismo
+      backend ya verificado en local, pendiente solo un recorrido manual completo en el navegador
+      contra la URL de producción.
 - [ ] T032 Documentar en el README cómo correr el proyecto local (Docker Compose) y cómo se
       reemplazaría el mock de login por el SSO real de UWallet.
+
+### Problemas reales encontrados y resueltos en el despliegue (útil para la sustentación)
+
+1. **`backend/Dockerfile` dependía de archivos que no existen en este repo** (`package.json`/
+   `bun.lock` y `uv.lock`/`pyproject.toml` en la raíz): venía del monorepo original de
+   `fastapi/full-stack-fastapi-template`, que sí los tiene. Se reescribió la etapa de frontend
+   para usar `node:22-slim` + `npm ci` sobre `frontend/` directamente, y se corrigieron las rutas
+   de los bind mounts de `uv sync` a `backend/uv.lock`/`backend/pyproject.toml`.
+2. **Render no vuelve a leer `render.yaml` en cada "Manual Deploy"**: los cambios a
+   `dockerCommand` en el archivo no se aplicaban al servicio ya creado hasta corregirlo
+   directamente vía la API de Render (`PATCH /v1/services/:id`). Para cambios de configuración
+   (no solo código), hay que usar un "Blueprint Sync" explícito o la API, no basta con pushear.
+3. **`dockerCommand` con `&&` no se interpretó como cadena de shell** en ningún formato probado
+   (ni plano ni envuelto en `sh -c "..."`) — Render lo trataba como un único nombre de programa
+   literal (`sh: 1: <comando completo>: not found`). Se resolvió moviendo la lógica a
+   `backend/scripts/start.sh` (sin `&&` ni comillas anidadas) y usando `dockerCommand: bash
+   scripts/start.sh`, una cadena de dos palabras sin ambigüedad posible de parseo.
+4. **`fastapi run` no escuchaba en el puerto que Render asigna dinámicamente** (`$PORT`): se
+   corrigió pasando `--host 0.0.0.0 --port "$PORT"` dentro de `start.sh`.
+5. El MCP de Render (`mcp.render.com/mcp`) no es compatible con el flujo de autenticación de
+   Claude Code ("Incompatible auth server: does not support dynamic client registration"); en su
+   lugar se usó la API REST de Render directamente con una API key personal para diagnosticar y
+   corregir el servicio sin depender de capturas de pantalla.
 
 ---
 
