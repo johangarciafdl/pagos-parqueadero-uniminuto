@@ -1,4 +1,4 @@
-import { Briefcase, Home, Users } from "lucide-react"
+import { CalendarClock, CircleHelp, History, ParkingSquare, Users } from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -13,8 +13,10 @@ import { type Item, Main } from "./Main"
 import { User } from "./User"
 
 const baseItems: Item[] = [
-  { icon: Home, title: "Dashboard", path: "/" },
-  { icon: Briefcase, title: "Items", path: "/items" },
+  { icon: ParkingSquare, title: "Pago / recarga", path: "/" },
+  { icon: CalendarClock, title: "Planes mensuales", path: "/plans" },
+  { icon: History, title: "Historial", path: "/history" },
+  { icon: CircleHelp, title: "FAQ y soporte", path: "/support" },
 ]
 
 export function AppSidebar() {

@@ -293,8 +293,9 @@ class PaymentPublic(SQLModel):
     id: uuid.UUID
     concept: PaymentConcept
     amount_cop: int
-    method_id: uuid.UUID
-    status_id: uuid.UUID
+    method_code: str
+    method_name: str
+    status_code: PaymentStatusCode
     wompi_reference: str
     created_at: datetime | None = None
     updated_at: datetime | None = None

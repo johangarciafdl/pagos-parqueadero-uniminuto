@@ -4,6 +4,7 @@ from fastapi import APIRouter, Query
 from sqlmodel import select
 
 from app.api.deps import CurrentUser, SessionDep
+from app.api.routes.payments import to_payment_public
 from app.models import (
     ParkingLog,
     ParkingLogsPublic,
@@ -49,7 +50,9 @@ def get_payment_history(
     page = sorted(all_matching, key=lambda p: p.created_at or datetime.min, reverse=True)[
         offset : offset + limit
     ]
-    return PaymentsPublic(data=page, count=count)
+    return PaymentsPublic(
+        data=[to_payment_public(session, p) for p in page], count=count
+    )
 
 
 @router.get("/log", response_model=ParkingLogsPublic)

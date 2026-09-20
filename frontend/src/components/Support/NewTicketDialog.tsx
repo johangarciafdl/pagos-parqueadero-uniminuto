@@ -1,11 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { Pencil } from "lucide-react"
+import { Plus } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type ItemPublic, ItemsService } from "@/client"
+import { type SupportTicketCreate, SupportService } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -15,8 +15,8 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/components/ui/dialog"
-import { DropdownMenuItem } from "@/components/ui/dropdown-menu"
 import {
   Form,
   FormControl,
@@ -31,108 +31,93 @@ import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const formSchema = z.object({
-  title: z.string().min(1, { message: "Title is required" }),
-  description: z.string().optional(),
+  subject: z.string().min(3, { message: "El asunto es requerido" }),
+  message: z.string().min(10, { message: "Cuéntanos más sobre tu solicitud" }),
 })
 
 type FormData = z.infer<typeof formSchema>
 
-interface EditItemProps {
-  item: ItemPublic
-  onSuccess: () => void
-}
-
-const EditItem = ({ item, onSuccess }: EditItemProps) => {
+export function NewTicketDialog() {
   const [isOpen, setIsOpen] = useState(false)
   const queryClient = useQueryClient()
   const { showSuccessToast, showErrorToast } = useCustomToast()
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    mode: "onBlur",
-    criteriaMode: "all",
-    defaultValues: {
-      title: item.title,
-      description: item.description ?? undefined,
-    },
+    defaultValues: { subject: "", message: "" },
   })
 
   const mutation = useMutation({
-    mutationFn: (data: FormData) =>
-      ItemsService.updateItem({ path: { id: item.id }, body: data }),
-    onSuccess: () => {
-      showSuccessToast("Item updated successfully")
+    mutationFn: (data: SupportTicketCreate) =>
+      SupportService.createTicket({ body: data }),
+    onSuccess: (response) => {
+      showSuccessToast(`Solicitud creada: caso ${response.data?.case_number}`)
+      form.reset()
       setIsOpen(false)
-      onSuccess()
     },
     onError: handleError.bind(showErrorToast),
     onSettled: () => {
-      queryClient.invalidateQueries({ queryKey: ["items"] })
+      queryClient.invalidateQueries({ queryKey: ["my-tickets"] })
     },
   })
 
-  const onSubmit = (data: FormData) => {
-    mutation.mutate(data)
-  }
-
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DropdownMenuItem
-        onSelect={(e) => e.preventDefault()}
-        onClick={() => setIsOpen(true)}
-      >
-        <Pencil />
-        Edit Item
-      </DropdownMenuItem>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="mr-2" />
+          Nueva solicitud
+        </Button>
+      </DialogTrigger>
       <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Nueva solicitud de soporte</DialogTitle>
+          <DialogDescription>
+            Te asignaremos un número de caso para hacerle seguimiento.
+          </DialogDescription>
+        </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)}>
-            <DialogHeader>
-              <DialogTitle>Edit Item</DialogTitle>
-              <DialogDescription>
-                Update the item details below.
-              </DialogDescription>
-            </DialogHeader>
+          <form onSubmit={form.handleSubmit((data) => mutation.mutate(data))}>
             <div className="grid gap-4 py-4">
               <FormField
                 control={form.control}
-                name="title"
+                name="subject"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>
-                      Title <span className="text-destructive">*</span>
-                    </FormLabel>
+                    <FormLabel>Asunto</FormLabel>
                     <FormControl>
-                      <Input placeholder="Title" type="text" {...field} />
+                      <Input placeholder="Pago rechazado" {...field} />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
-
               <FormField
                 control={form.control}
-                name="description"
+                name="message"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Description</FormLabel>
+                    <FormLabel>Mensaje</FormLabel>
                     <FormControl>
-                      <Input placeholder="Description" type="text" {...field} />
+                      <textarea
+                        className="border-input min-h-24 w-full rounded-md border bg-transparent px-3 py-2 text-sm shadow-xs outline-none"
+                        placeholder="Describe tu solicitud..."
+                        {...field}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
                 )}
               />
             </div>
-
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={mutation.isPending}>
-                  Cancel
+                  Cancelar
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save
+                Enviar
               </LoadingButton>
             </DialogFooter>
           </form>
@@ -141,5 +126,3 @@ const EditItem = ({ item, onSuccess }: EditItemProps) => {
     </Dialog>
   )
 }
-
-export default EditItem

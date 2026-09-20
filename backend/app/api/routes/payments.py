@@ -14,6 +14,7 @@ from app.models import (
     PaymentConcept,
     PaymentInitiate,
     PaymentMethod,
+    PaymentMethodPublic,
     PaymentPublic,
     PaymentStatus,
     PaymentStatusCode,
@@ -24,6 +25,13 @@ from app.models import (
 )
 
 router = APIRouter(prefix="/payments", tags=["payments"])
+
+
+@router.get("/methods", response_model=list[PaymentMethodPublic])
+def list_payment_methods(session: SessionDep) -> list[PaymentMethod]:
+    return session.exec(
+        select(PaymentMethod).where(PaymentMethod.enabled == True)  # noqa: E712
+    ).all()
 
 
 class PaymentInitiateResponse(PaymentPublic):
@@ -40,6 +48,27 @@ def _get_status(session: SessionDep, code: PaymentStatusCode) -> PaymentStatus:
     if status_row is None:
         raise HTTPException(500, "Catálogo de estados no inicializado")
     return status_row
+
+
+def to_payment_public(session: SessionDep, payment: Payment) -> PaymentPublic:
+    """PaymentPublic no expone method_id/status_id crudos: resuelve los
+    catálogos para que el frontend pueda mostrar texto legible sin tener
+    que conocer los IDs internos."""
+    method = session.get(PaymentMethod, payment.method_id)
+    status_row = session.get(PaymentStatus, payment.status_id)
+    if method is None or status_row is None:
+        raise HTTPException(500, "Catálogo de método/estado inconsistente")
+    return PaymentPublic(
+        id=payment.id,
+        concept=payment.concept,
+        amount_cop=payment.amount_cop,
+        method_code=method.code,
+        method_name=method.name,
+        status_code=status_row.code,
+        wompi_reference=payment.wompi_reference,
+        created_at=payment.created_at,
+        updated_at=payment.updated_at,
+    )
 
 
 def _resolve_amount_and_refs(
@@ -125,15 +154,9 @@ def create_payment(
         reference=reference, amount_in_cents=amount_in_cents
     )
 
+    public = to_payment_public(session, payment)
     return PaymentInitiateResponse(
-        id=payment.id,
-        concept=payment.concept,
-        amount_cop=payment.amount_cop,
-        method_id=payment.method_id,
-        status_id=payment.status_id,
-        wompi_reference=payment.wompi_reference,
-        created_at=payment.created_at,
-        updated_at=payment.updated_at,
+        **public.model_dump(),
         wompi_public_key=settings.WOMPI_PUBLIC_KEY,
         amount_in_cents=amount_in_cents,
         integrity_signature=signature,
@@ -170,10 +193,10 @@ def list_vehicles_with_pending_fee(
 @router.get("/{payment_id}", response_model=PaymentPublic)
 def get_payment(
     session: SessionDep, current_user: CurrentUser, payment_id: uuid.UUID
-) -> Payment:
+) -> PaymentPublic:
     payment = session.get(Payment, payment_id)
     if not payment or (
         payment.user_id != current_user.id and not current_user.is_superuser
     ):
         raise HTTPException(404, "Pago no encontrado")
-    return payment
+    return to_payment_public(session, payment)
