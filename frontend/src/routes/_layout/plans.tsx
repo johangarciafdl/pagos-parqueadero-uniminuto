@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
 
-import type { PaymentMethodPublic, PlanPublic, VehicleTypePublic } from "@/client"
-import { PaymentsService, PlansService, VehiclesService } from "@/client"
+import type { PaymentMethodPublic, PlanPublic } from "@/client"
+import { PaymentsService, PlansService } from "@/client"
+import { PushNotificationPrompt } from "@/components/Plans/PushNotificationPrompt"
 import { Badge } from "@/components/ui/badge"
 import {
   Card,
@@ -36,11 +37,6 @@ function PlansPage() {
     queryFn: async () => (await PlansService.listPlans()).data,
   })
 
-  const { data: vehicleTypes } = useQuery({
-    queryKey: ["vehicle-types"],
-    queryFn: async () => (await VehiclesService.listVehicleTypes()).data,
-  })
-
   const { data: subscription } = useQuery({
     queryKey: ["my-subscription"],
     queryFn: async () => (await PlansService.myActiveSubscription()).data,
@@ -57,9 +53,6 @@ function PlansPage() {
     ["my-subscription"],
     ["payment-history"],
   ])
-
-  const typeName = (id: string) =>
-    vehicleTypes?.find((t: VehicleTypePublic) => t.id === id)?.name ?? ""
 
   return (
     <div className="flex flex-col gap-6">
@@ -84,6 +77,8 @@ function PlansPage() {
         </Card>
       )}
 
+      <PushNotificationPrompt />
+
       <div className="flex flex-col gap-3 sm:max-w-xs">
         <span className="text-sm font-medium">Método de pago</span>
         <Select value={methodId} onValueChange={setMethodId}>
@@ -105,7 +100,7 @@ function PlansPage() {
           <Card key={plan.id}>
             <CardHeader>
               <CardTitle>{plan.name}</CardTitle>
-              <CardDescription>{typeName(plan.vehicle_type_id)}</CardDescription>
+              <CardDescription>Acceso ilimitado al parqueadero</CardDescription>
             </CardHeader>
             <CardContent className="flex flex-col gap-1">
               <span className="text-2xl font-semibold">

@@ -1,10 +1,18 @@
-import secrets
+import uuid
 from typing import Any
 
 from sqlmodel import Session, select
 
+from app.core.qr import create_qr_token, decode_qr_token
 from app.core.security import get_password_hash, verify_password
-from app.models import KioskRegister, User, UserCreate, UserUpdate
+from app.models import (
+    KioskRegister,
+    StaffRegister,
+    User,
+    UserCreate,
+    UserRole,
+    UserUpdate,
+)
 
 
 def create_user(*, session: Session, user_create: UserCreate) -> User:
@@ -17,20 +25,31 @@ def create_user(*, session: Session, user_create: UserCreate) -> User:
     return db_obj
 
 
-def _generate_unique_qr_token(session: Session) -> str:
-    for _ in range(5):
-        token = secrets.token_urlsafe(32)
-        if not session.exec(select(User).where(User.qr_token == token)).first():
-            return token
-    raise RuntimeError("No se pudo generar un qr_token único")
-
-
 def create_kiosk_user(*, session: Session, data: KioskRegister) -> User:
     db_obj = User(
         student_id=data.student_id,
-        full_name=data.full_name,
-        qr_token=_generate_unique_qr_token(session),
+        first_name=data.first_name,
+        last_name=data.last_name,
+        full_name=f"{data.first_name} {data.last_name}",
+        role=UserRole.ESTUDIANTE,
     )
+    db_obj.qr_token = create_qr_token(db_obj)
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    return db_obj
+
+
+def create_staff_user(*, session: Session, data: StaffRegister) -> User:
+    """Alta de personal exento de pago (solo la crea un admin)."""
+    db_obj = User(
+        student_id=data.student_id,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        full_name=f"{data.first_name} {data.last_name}",
+        role=UserRole.EXENTO,
+    )
+    db_obj.qr_token = create_qr_token(db_obj)
     session.add(db_obj)
     session.commit()
     session.refresh(db_obj)
@@ -38,11 +57,18 @@ def create_kiosk_user(*, session: Session, data: KioskRegister) -> User:
 
 
 def regenerate_qr_token(*, session: Session, user: User) -> User:
-    user.qr_token = _generate_unique_qr_token(session)
+    user.qr_token = create_qr_token(user)
     session.add(user)
     session.commit()
     session.refresh(user)
     return user
+
+
+def reissue_qr_token(*, session: Session, user: User) -> User:
+    """Reemite el QR con el estado actual (ej. tras aprobar un plan), sin
+    que el usuario lo pida — para que el QR "cambie" cuando cambia su
+    condición de pago."""
+    return regenerate_qr_token(session=session, user=user)
 
 
 def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
@@ -70,8 +96,19 @@ def get_user_by_student_id(*, session: Session, student_id: str) -> User | None:
 
 
 def get_user_by_qr_token(*, session: Session, qr_token: str) -> User | None:
-    statement = select(User).where(User.qr_token == qr_token)
-    return session.exec(statement).first()
+    """Decodifica el JWT del QR y confirma que sigue siendo el vigente para
+    ese usuario (si se regeneró después de emitirse, este ya no sirve)."""
+    payload = decode_qr_token(qr_token)
+    if not payload or not payload["sub"]:
+        return None
+    try:
+        user_id = uuid.UUID(payload["sub"])
+    except ValueError:
+        return None
+    user = session.get(User, user_id)
+    if not user or user.qr_token != qr_token:
+        return None
+    return user
 
 
 # Dummy hash to use for timing attack prevention when user is not found

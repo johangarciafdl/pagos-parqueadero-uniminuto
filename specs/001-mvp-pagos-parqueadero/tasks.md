@@ -15,6 +15,53 @@ para el administrador (`/staff`). Ver `backend/app/api/routes/kiosk.py` y
 `frontend/src/routes/login.tsx`. Verificado end-to-end en producción real
 (Render + Neon): registro → QR → reingreso por ID → reingreso por QR.
 
+## Fase 8 — Personal exento, suscripción real, QR con formato del parqueadero real y notificaciones push
+
+Requisito del usuario: (1) el personal de UNIMINUTO exento de pago necesita un flujo de
+registro propio, sin pasar por el pago; (2) solo existe un plan de $50.000/mes, inactivo por
+defecto hasta que un administrador lo activa; (3) al comprar el plan la suscripción se comporta
+como una suscripción real (se extiende desde la fecha de vencimiento anterior si ya estaba
+activa) y el QR del usuario cambia para reflejar el acceso ilimitado por ese mes; (4) el QR debe
+tener la misma forma (JWT con claims `nombre`/`apellido`/`rol`/`documento`) que el QR real de la
+máquina física del parqueadero de la Uniminuto, para compatibilidad conceptual futura — aclarado
+explícitamente al usuario que la llave de firma es propia (`SECRET_KEY`), no la institucional, así
+que el QR generado aquí no es válido en la máquina física real; y notificaciones push reales al
+navegador/teléfono (no solo banners in-app), similares a un aviso de renovación de Spotify.
+
+- [x] T033 `UserRole` (`ESTUDIANTE`/`EXENTO`) y `User.plan_until` agregados al modelo.
+      `POST /kiosk/register-staff` (solo superusuario) crea usuarios `EXENTO` con acceso
+      ilimitado permanente. Migración `e372c0075bf8` aplicada a Neon (incluye `CREATE TYPE`
+      explícito para el enum de Postgres, ya que `op.add_column` con `sa.Enum` no lo genera
+      automáticamente).
+- [x] T034 `core/qr.py`: el QR pasó de ser un token opaco a un JWT firmado (`HS256`) con claims
+      `sub`, `nombre`, `apellido`, `rol`, `documento`, `plan_until` — mismo formato observado en
+      el QR real decodificado por el usuario. `POST /kiosk/verify-qr` (solo superusuario) decodifica
+      y devuelve `acceso_libre` (true si `rol=EXENTO` o `plan_until` vigente); página
+      `/verify-qr` en el frontend actúa como lector (un scanner físico se comporta como teclado,
+      así que basta un `<input autoFocus>` que reciba el texto y se envíe con Enter).
+- [x] T035 `Plan.active` por defecto `False`; sembrado en `core/db.py` como el único plan
+      ($50.000/30 días), inactivo. Nuevo endpoint `GET /plans/all` (solo superusuario) para verlo
+      en el panel de administración aunque esté inactivo; `PATCH /plans/{id}` ya existente se
+      reutiliza para activarlo/desactivarlo. UI en `/admin` (`PlanControl`) con botón
+      Activar/Desactivar.
+- [x] T036 `webhooks.py`: al confirmarse un pago de plan, `_activate_or_renew_subscription`
+      ahora también actualiza `User.plan_until` y reemite el QR del usuario (`create_qr_token`)
+      para que quede embebido el nuevo vencimiento — el QR "cambia" al comprar el plan, tal como
+      pidió el usuario.
+- [x] T037 Notificaciones push reales (Web Push/VAPID, no solo banners): `core/push.py`
+      (`pywebpush`), endpoints `/push/public-key`, `/push/subscribe`, `/push/unsubscribe`,
+      service worker `frontend/public/sw.js`, componente `PushNotificationPrompt` en `/plans`
+      que pide permiso y se suscribe. Se dispara notificación al renovar el plan
+      (`notify_plan_renewed`) y hay un endpoint interno `POST /internal/check-expiring-plans`
+      (protegido con header `X-Cron-Secret`, no JWT, porque lo llama un proceso externo) que
+      avisa 3 y 1 día antes del vencimiento — pensado para un cron externo (GitHub Actions,
+      `.github/workflows/check-expiring-plans.yml`) ya que Render free no tiene cron jobs nativos.
+- [x] T038 54+ tests de backend pasando (incluye `test_kiosk.py` y nuevo `test_plans.py` para el
+      toggle de activación); `ruff check` limpio; `tsc --noEmit` limpio en frontend.
+
+**Pendiente**: desplegar esta fase a Render (configurar `VAPID_PUBLIC_KEY`/`VAPID_PRIVATE_KEY`/
+`CRON_SECRET` reales en el dashboard, nunca placeholders) y verificar en producción.
+
 ## Día 1 — Setup + Foundational
 
 - [x] T001 Postgres real levantado (contenedor local); pendiente probar el `compose.yml`

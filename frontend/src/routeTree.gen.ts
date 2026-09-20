@@ -17,7 +17,9 @@ import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
 import { Route as LayoutHistoryRouteImport } from './routes/_layout/history'
 import { Route as LayoutPlansRouteImport } from './routes/_layout/plans'
 import { Route as LayoutSettingsRouteImport } from './routes/_layout/settings'
+import { Route as LayoutStaffRegisterRouteImport } from './routes/_layout/staff-register'
 import { Route as LayoutSupportRouteImport } from './routes/_layout/support'
+import { Route as LayoutVerifyQrRouteImport } from './routes/_layout/verify-qr'
 
 const LayoutRoute = LayoutRouteImport.update({
   id: '/_layout',
@@ -58,9 +60,19 @@ const LayoutSettingsRoute = LayoutSettingsRouteImport.update({
   path: '/settings',
   getParentRoute: () => LayoutRoute,
 } as any)
+const LayoutStaffRegisterRoute = LayoutStaffRegisterRouteImport.update({
+  id: '/staff-register',
+  path: '/staff-register',
+  getParentRoute: () => LayoutRoute,
+} as any)
 const LayoutSupportRoute = LayoutSupportRouteImport.update({
   id: '/support',
   path: '/support',
+  getParentRoute: () => LayoutRoute,
+} as any)
+const LayoutVerifyQrRoute = LayoutVerifyQrRouteImport.update({
+  id: '/verify-qr',
+  path: '/verify-qr',
   getParentRoute: () => LayoutRoute,
 } as any)
 
@@ -72,7 +84,9 @@ export interface FileRoutesByFullPath {
   '/history': typeof LayoutHistoryRoute
   '/plans': typeof LayoutPlansRoute
   '/settings': typeof LayoutSettingsRoute
+  '/staff-register': typeof LayoutStaffRegisterRoute
   '/support': typeof LayoutSupportRoute
+  '/verify-qr': typeof LayoutVerifyQrRoute
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
@@ -81,7 +95,9 @@ export interface FileRoutesByTo {
   '/history': typeof LayoutHistoryRoute
   '/plans': typeof LayoutPlansRoute
   '/settings': typeof LayoutSettingsRoute
+  '/staff-register': typeof LayoutStaffRegisterRoute
   '/support': typeof LayoutSupportRoute
+  '/verify-qr': typeof LayoutVerifyQrRoute
   '/': typeof LayoutIndexRoute
 }
 export interface FileRoutesById {
@@ -93,7 +109,9 @@ export interface FileRoutesById {
   '/_layout/history': typeof LayoutHistoryRoute
   '/_layout/plans': typeof LayoutPlansRoute
   '/_layout/settings': typeof LayoutSettingsRoute
+  '/_layout/staff-register': typeof LayoutStaffRegisterRoute
   '/_layout/support': typeof LayoutSupportRoute
+  '/_layout/verify-qr': typeof LayoutVerifyQrRoute
   '/_layout/': typeof LayoutIndexRoute
 }
 export interface FileRouteTypes {
@@ -106,7 +124,9 @@ export interface FileRouteTypes {
     | '/history'
     | '/plans'
     | '/settings'
+    | '/staff-register'
     | '/support'
+    | '/verify-qr'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
@@ -115,7 +135,9 @@ export interface FileRouteTypes {
     | '/history'
     | '/plans'
     | '/settings'
+    | '/staff-register'
     | '/support'
+    | '/verify-qr'
     | '/'
   id:
     | '__root__'
@@ -126,7 +148,9 @@ export interface FileRouteTypes {
     | '/_layout/history'
     | '/_layout/plans'
     | '/_layout/settings'
+    | '/_layout/staff-register'
     | '/_layout/support'
+    | '/_layout/verify-qr'
     | '/_layout/'
   fileRoutesById: FileRoutesById
 }
@@ -194,11 +218,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LayoutSettingsRouteImport
       parentRoute: typeof LayoutRoute
     }
+    '/_layout/staff-register': {
+      id: '/_layout/staff-register'
+      path: '/staff-register'
+      fullPath: '/staff-register'
+      preLoaderRoute: typeof LayoutStaffRegisterRouteImport
+      parentRoute: typeof LayoutRoute
+    }
     '/_layout/support': {
       id: '/_layout/support'
       path: '/support'
       fullPath: '/support'
       preLoaderRoute: typeof LayoutSupportRouteImport
+      parentRoute: typeof LayoutRoute
+    }
+    '/_layout/verify-qr': {
+      id: '/_layout/verify-qr'
+      path: '/verify-qr'
+      fullPath: '/verify-qr'
+      preLoaderRoute: typeof LayoutVerifyQrRouteImport
       parentRoute: typeof LayoutRoute
     }
   }
@@ -209,7 +247,9 @@ interface LayoutRouteChildren {
   LayoutHistoryRoute: typeof LayoutHistoryRoute
   LayoutPlansRoute: typeof LayoutPlansRoute
   LayoutSettingsRoute: typeof LayoutSettingsRoute
+  LayoutStaffRegisterRoute: typeof LayoutStaffRegisterRoute
   LayoutSupportRoute: typeof LayoutSupportRoute
+  LayoutVerifyQrRoute: typeof LayoutVerifyQrRoute
   LayoutIndexRoute: typeof LayoutIndexRoute
 }
 
@@ -218,7 +258,9 @@ const LayoutRouteChildren: LayoutRouteChildren = {
   LayoutHistoryRoute: LayoutHistoryRoute,
   LayoutPlansRoute: LayoutPlansRoute,
   LayoutSettingsRoute: LayoutSettingsRoute,
+  LayoutStaffRegisterRoute: LayoutStaffRegisterRoute,
   LayoutSupportRoute: LayoutSupportRoute,
+  LayoutVerifyQrRoute: LayoutVerifyQrRoute,
   LayoutIndexRoute: LayoutIndexRoute,
 }
 

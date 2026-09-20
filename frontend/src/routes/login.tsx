@@ -41,7 +41,8 @@ function Kiosk() {
   const { kioskSessionMutation, kioskRegisterMutation } = useAuth()
   const [mode, setMode] = useState<Mode>("enter")
   const [studentId, setStudentId] = useState("")
-  const [fullName, setFullName] = useState("")
+  const [firstName, setFirstName] = useState("")
+  const [lastName, setLastName] = useState("")
   const [qrToken, setQrToken] = useState("")
 
   const handleEnter = (e: React.FormEvent) => {
@@ -52,9 +53,13 @@ function Kiosk() {
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!studentId.trim() || !fullName.trim()) return
+    if (!studentId.trim() || !firstName.trim() || !lastName.trim()) return
     kioskRegisterMutation.mutate(
-      { student_id: studentId.trim(), full_name: fullName.trim() },
+      {
+        student_id: studentId.trim(),
+        first_name: firstName.trim(),
+        last_name: lastName.trim(),
+      },
       {
         onSuccess: (result) => {
           setQrToken(result.qr_token)
@@ -116,13 +121,22 @@ function Kiosk() {
             </div>
             <form onSubmit={handleRegister} className="grid gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="new_full_name">Nombre completo</Label>
+                <Label htmlFor="new_first_name">Nombres</Label>
                 <Input
-                  id="new_full_name"
-                  placeholder="Nombre y apellido"
+                  id="new_first_name"
+                  placeholder="Nombres"
                   autoFocus
-                  value={fullName}
-                  onChange={(e) => setFullName(e.target.value)}
+                  value={firstName}
+                  onChange={(e) => setFirstName(e.target.value)}
+                />
+              </div>
+              <div className="grid gap-2">
+                <Label htmlFor="new_last_name">Apellidos</Label>
+                <Input
+                  id="new_last_name"
+                  placeholder="Apellidos"
+                  value={lastName}
+                  onChange={(e) => setLastName(e.target.value)}
                 />
               </div>
               <div className="grid gap-2">

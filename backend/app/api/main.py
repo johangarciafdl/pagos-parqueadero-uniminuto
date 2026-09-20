@@ -3,11 +3,13 @@ from fastapi import APIRouter
 from app.api.routes import (
     faq,
     history,
+    internal,
     kiosk,
     login,
     payments,
     plans,
     private,
+    push,
     support,
     users,
     utils,
@@ -28,6 +30,8 @@ api_router.include_router(plans.router)
 api_router.include_router(history.router)
 api_router.include_router(faq.router)
 api_router.include_router(support.router)
+api_router.include_router(push.router)
+api_router.include_router(internal.router)
 
 
 if settings.FASTAPI_ENV == "development":

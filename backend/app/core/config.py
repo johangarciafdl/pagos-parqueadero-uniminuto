@@ -71,6 +71,17 @@ class Settings(BaseSettings):
     WOMPI_INTEGRITY_SECRET: str
     WOMPI_EVENTS_SECRET: str
 
+    # Notificaciones push (Web Push API). Opcionales: si no se configuran,
+    # el envío de push simplemente se omite en vez de fallar (no son
+    # criticas para el funcionamiento del resto de la app).
+    VAPID_PUBLIC_KEY: str | None = None
+    VAPID_PRIVATE_KEY: str | None = None
+    VAPID_CONTACT_EMAIL: str = "soporte@uniminuto.edu.co"
+
+    # Secreto compartido para el endpoint que revisa planes por vencer,
+    # llamado por un cron externo (GitHub Actions), no por un usuario.
+    CRON_SECRET: str | None = None
+
     def _check_default_secret(self, var_name: str, value: str | None) -> None:
         if value == "changethis":
             message = (

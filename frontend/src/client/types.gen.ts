@@ -139,9 +139,13 @@ export type KioskRegister = {
      */
     student_id: string;
     /**
-     * Full Name
+     * First Name
      */
-    full_name: string;
+    first_name: string;
+    /**
+     * Last Name
+     */
+    last_name: string;
 };
 
 /**
@@ -422,7 +426,7 @@ export type PlanCreate = {
     /**
      * Vehicle Type Id
      */
-    vehicle_type_id: string;
+    vehicle_type_id?: string | null;
 };
 
 /**
@@ -456,7 +460,7 @@ export type PlanPublic = {
     /**
      * Vehicle Type Id
      */
-    vehicle_type_id: string;
+    vehicle_type_id?: string | null;
 };
 
 /**
@@ -522,6 +526,24 @@ export type PrivateUserCreate = {
 };
 
 /**
+ * PushSubscriptionCreate
+ */
+export type PushSubscriptionCreate = {
+    /**
+     * Endpoint
+     */
+    endpoint: string;
+    /**
+     * P256Dh
+     */
+    p256dh: string;
+    /**
+     * Auth
+     */
+    auth: string;
+};
+
+/**
  * QRSession
  */
 export type QRSession = {
@@ -529,6 +551,26 @@ export type QRSession = {
      * Qr Token
      */
     qr_token: string;
+};
+
+/**
+ * StaffRegister
+ *
+ * Alta de personal de UNIMINUTO exento de pago (solo un admin puede crearla).
+ */
+export type StaffRegister = {
+    /**
+     * Student Id
+     */
+    student_id: string;
+    /**
+     * First Name
+     */
+    first_name: string;
+    /**
+     * Last Name
+     */
+    last_name: string;
 };
 
 /**
@@ -679,9 +721,22 @@ export type UserCreate = {
      */
     full_name?: string | null;
     /**
+     * First Name
+     */
+    first_name?: string | null;
+    /**
+     * Last Name
+     */
+    last_name?: string | null;
+    /**
      * Student Id
      */
     student_id?: string | null;
+    role?: UserRole;
+    /**
+     * Plan Until
+     */
+    plan_until?: string | null;
     /**
      * Password
      */
@@ -716,11 +771,21 @@ export type UserPublic = {
      * Student Id
      */
     student_id?: string | null;
+    role: UserRole;
+    /**
+     * Plan Until
+     */
+    plan_until?: string | null;
     /**
      * Created At
      */
     created_at?: string | null;
 };
+
+/**
+ * UserRole
+ */
+export type UserRole = 'ESTUDIANTE' | 'EXENTO';
 
 /**
  * UserUpdate
@@ -1027,6 +1092,31 @@ export type kioskRegisterResponses = {
 
 export type kioskRegisterResponse = kioskRegisterResponses[keyof kioskRegisterResponses];
 
+export type kioskRegisterStaffData = {
+    body: StaffRegister;
+    path?: never;
+    query?: never;
+    url: '/api/v1/kiosk/register-staff';
+};
+
+export type kioskRegisterStaffErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type kioskRegisterStaffError = kioskRegisterStaffErrors[keyof kioskRegisterStaffErrors];
+
+export type kioskRegisterStaffResponses = {
+    /**
+     * Successful Response
+     */
+    200: KioskRegisterResponse;
+};
+
+export type kioskRegisterStaffResponse = kioskRegisterStaffResponses[keyof kioskRegisterStaffResponses];
+
 export type kioskSessionByStudentIdData = {
     body: KioskSession;
     path?: never;
@@ -1116,6 +1206,35 @@ export type kioskRegenerateQrResponses = {
 };
 
 export type kioskRegenerateQrResponse = kioskRegenerateQrResponses[keyof kioskRegenerateQrResponses];
+
+export type kioskVerifyQrData = {
+    body: QRSession;
+    path?: never;
+    query?: never;
+    url: '/api/v1/kiosk/verify-qr';
+};
+
+export type kioskVerifyQrErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type kioskVerifyQrError = kioskVerifyQrErrors[keyof kioskVerifyQrErrors];
+
+export type kioskVerifyQrResponses = {
+    /**
+     * Response Kiosk-Verify Qr
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type kioskVerifyQrResponse = kioskVerifyQrResponses[keyof kioskVerifyQrResponses];
 
 export type usersReadUsersData = {
     body?: never;
@@ -1641,6 +1760,22 @@ export type plansCreatePlanResponses = {
 
 export type plansCreatePlanResponse = plansCreatePlanResponses[keyof plansCreatePlanResponses];
 
+export type plansListAllPlansData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/plans/all';
+};
+
+export type plansListAllPlansResponses = {
+    /**
+     * Successful Response
+     */
+    200: PlansPublic;
+};
+
+export type plansListAllPlansResponse = plansListAllPlansResponses[keyof plansListAllPlansResponses];
+
 export type plansUpdatePlanData = {
     body: PlanUpdate;
     path: {
@@ -1954,6 +2089,116 @@ export type supportUpdateTicketStatusResponses = {
 };
 
 export type supportUpdateTicketStatusResponse = supportUpdateTicketStatusResponses[keyof supportUpdateTicketStatusResponses];
+
+export type pushGetPublicKeyData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/push/public-key';
+};
+
+export type pushGetPublicKeyResponses = {
+    /**
+     * Response Push-Get Public Key
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type pushGetPublicKeyResponse = pushGetPublicKeyResponses[keyof pushGetPublicKeyResponses];
+
+export type pushSubscribeData = {
+    body: PushSubscriptionCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/push/subscribe';
+};
+
+export type pushSubscribeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type pushSubscribeError = pushSubscribeErrors[keyof pushSubscribeErrors];
+
+export type pushSubscribeResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type pushSubscribeResponse = pushSubscribeResponses[keyof pushSubscribeResponses];
+
+export type pushUnsubscribeData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * Endpoint
+         */
+        endpoint: string;
+    };
+    url: '/api/v1/push/unsubscribe';
+};
+
+export type pushUnsubscribeErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type pushUnsubscribeError = pushUnsubscribeErrors[keyof pushUnsubscribeErrors];
+
+export type pushUnsubscribeResponses = {
+    /**
+     * Successful Response
+     */
+    200: Message;
+};
+
+export type pushUnsubscribeResponse = pushUnsubscribeResponses[keyof pushUnsubscribeResponses];
+
+export type internalCheckExpiringPlansData = {
+    body?: never;
+    headers?: {
+        /**
+         * X-Cron-Secret
+         */
+        'x-cron-secret'?: string | null;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/v1/internal/check-expiring-plans';
+};
+
+export type internalCheckExpiringPlansErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type internalCheckExpiringPlansError = internalCheckExpiringPlansErrors[keyof internalCheckExpiringPlansErrors];
+
+export type internalCheckExpiringPlansResponses = {
+    /**
+     * Response Internal-Check Expiring Plans
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type internalCheckExpiringPlansResponse = internalCheckExpiringPlansResponses[keyof internalCheckExpiringPlansResponses];
 
 export type privateCreateUserData = {
     body: PrivateUserCreate;

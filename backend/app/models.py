@@ -19,6 +19,11 @@ def get_datetime_utc() -> datetime:
 # pensado para un flujo de kiosco: escribes tu ID (o escaneas tu QR) y ya
 # tienes acceso a pago/planes/historial/soporte. El correo+contraseña se deja
 # reservado para el administrador (permisos elevados, sí requiere contraseña).
+class UserRole(StrEnum):
+    ESTUDIANTE = "ESTUDIANTE"
+    EXENTO = "EXENTO"  # personal de UNIMINUTO exento de pago del parqueadero
+
+
 class UserBase(SQLModel):
     email: EmailStr | None = Field(
         default=None, unique=True, index=True, max_length=255
@@ -26,9 +31,17 @@ class UserBase(SQLModel):
     is_active: bool = True
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
+    first_name: str | None = Field(default=None, max_length=100)
+    last_name: str | None = Field(default=None, max_length=150)
     student_id: str | None = Field(
         default=None, unique=True, index=True, max_length=20
     )
+    role: UserRole = UserRole.ESTUDIANTE
+    # Fecha hasta la que tiene un plan mensual activo (o None). Se cachea acá
+    # ademas de en Subscription para poder incluirla en el QR sin una
+    # consulta adicional y para que el lector del parqueadero pueda validar
+    # sin depender de la base de datos.
+    plan_until: date | None = None
 
 
 class UserCreate(UserBase):
@@ -42,7 +55,16 @@ class KioskRegister(SQLModel):
     """Alta de un estudiante: sin contraseña, solo su ID y nombre."""
 
     student_id: str = Field(min_length=1, max_length=20)
-    full_name: str = Field(min_length=1, max_length=255)
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=150)
+
+
+class StaffRegister(SQLModel):
+    """Alta de personal de UNIMINUTO exento de pago (solo un admin puede crearla)."""
+
+    student_id: str = Field(min_length=1, max_length=20)
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=150)
 
 
 class KioskSession(SQLModel):
@@ -50,7 +72,7 @@ class KioskSession(SQLModel):
 
 
 class QRSession(SQLModel):
-    qr_token: str = Field(min_length=1, max_length=64)
+    qr_token: str = Field(min_length=1, max_length=2000)
 
 
 class UserUpdate(SQLModel):
@@ -73,11 +95,12 @@ class UpdatePassword(SQLModel):
 class User(UserBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     hashed_password: str | None = Field(default=None)
-    # Token secreto de alta entropía (no el student_id, que puede ser
-    # adivinable) codificado en el QR del estudiante para reingresar.
-    qr_token: str | None = Field(
-        default=None, unique=True, index=True, max_length=64
-    )
+    # El QR es un JWT firmado (header/payload/firma) con la identidad del
+    # usuario (nombre, apellido, rol, documento) — mismo formato que usa el
+    # lector físico real del parqueadero, aunque firmado con nuestra propia
+    # llave (no tenemos la de UNIMINUTO). Se guarda el último emitido para
+    # poder invalidar uno anterior al regenerarlo.
+    qr_token: str | None = Field(default=None, index=True, max_length=2000)
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
@@ -90,6 +113,9 @@ class User(UserBase, table=True):
     support_tickets: list[SupportTicket] = Relationship(
         back_populates="user", cascade_delete=True
     )
+    push_subscriptions: list[PushSubscription] = Relationship(
+        back_populates="user", cascade_delete=True
+    )
 
 
 class UserPublic(SQLModel):
@@ -99,6 +125,8 @@ class UserPublic(SQLModel):
     is_superuser: bool
     full_name: str | None = None
     student_id: str | None = None
+    role: UserRole
+    plan_until: date | None = None
     created_at: datetime | None = None
 
 
@@ -216,11 +244,14 @@ class PlanBase(SQLModel):
     price_cop: int = Field(ge=0)
     duration_days: int = Field(gt=0)
     conditions: str | None = Field(default=None, max_length=1000)
-    active: bool = True
+    # Por defecto inactivo: un admin lo activa desde el panel cuando el
+    # plan mensual esté listo para venderse (un solo plan para todos los
+    # tipos de vehículo, no diferenciado por tipo).
+    active: bool = False
 
 
 class PlanCreate(PlanBase):
-    vehicle_type_id: uuid.UUID
+    vehicle_type_id: uuid.UUID | None = None
 
 
 class PlanUpdate(SQLModel):
@@ -233,12 +264,14 @@ class PlanUpdate(SQLModel):
 
 class Plan(PlanBase, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    vehicle_type_id: uuid.UUID = Field(foreign_key="vehicletype.id", nullable=False)
+    vehicle_type_id: uuid.UUID | None = Field(
+        default=None, foreign_key="vehicletype.id", nullable=True
+    )
 
 
 class PlanPublic(PlanBase):
     id: uuid.UUID
-    vehicle_type_id: uuid.UUID
+    vehicle_type_id: uuid.UUID | None = None
 
 
 class PlansPublic(SQLModel):
@@ -268,6 +301,30 @@ class SubscriptionPublic(SQLModel):
     start_date: date
     end_date: date
     active: bool
+
+
+# ---------------------------------------------------------------------------
+# Notificaciones push (Web Push API) — avisos tipo "tu plan vence en 3 días"
+# o "tu plan se renovó", directo al teléfono/navegador del estudiante.
+# ---------------------------------------------------------------------------
+
+
+class PushSubscriptionCreate(SQLModel):
+    endpoint: str = Field(max_length=1000)
+    p256dh: str = Field(max_length=255)
+    auth: str = Field(max_length=255)
+
+
+class PushSubscription(SQLModel, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    user_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    endpoint: str = Field(unique=True, index=True, max_length=1000)
+    p256dh: str = Field(max_length=255)
+    auth: str = Field(max_length=255)
+    created_at: datetime | None = Field(
+        default_factory=get_datetime_utc, sa_type=DateTime(timezone=True)  # type: ignore
+    )
+    user: User | None = Relationship(back_populates="push_subscriptions")
 
 
 # ---------------------------------------------------------------------------

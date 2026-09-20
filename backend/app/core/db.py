@@ -6,6 +6,7 @@ from app.models import (
     PaymentMethod,
     PaymentStatus,
     PaymentStatusCode,
+    Plan,
     User,
     UserCreate,
     VehicleType,
@@ -73,3 +74,18 @@ def init_db(session: Session) -> None:
     _seed_catalog(session, VehicleType, VEHICLE_TYPES)
     _seed_catalog(session, PaymentMethod, PAYMENT_METHODS)
     _seed_catalog(session, PaymentStatus, PAYMENT_STATUSES)
+
+    # Un único plan mensual, sin diferenciar por tipo de vehículo. Inactivo
+    # por defecto: un admin lo activa desde el panel cuando esté listo para
+    # ofrecerse (PATCH /plans/{id} con active=true).
+    if not session.exec(select(Plan)).first():
+        session.add(
+            Plan(
+                name="Plan mensual parqueadero",
+                price_cop=50000,
+                duration_days=30,
+                conditions="Acceso ilimitado al parqueadero durante 30 días.",
+                active=False,
+            )
+        )
+        session.commit()

@@ -24,6 +24,16 @@ def list_plans(session: SessionDep) -> PlansPublic:
     return PlansPublic(data=plans, count=len(plans))
 
 
+@router.get(
+    "/all",
+    response_model=PlansPublic,
+    dependencies=[Depends(get_current_active_superuser)],
+)
+def list_all_plans(session: SessionDep) -> PlansPublic:
+    plans = session.exec(select(Plan)).all()
+    return PlansPublic(data=plans, count=len(plans))
+
+
 @router.post(
     "/",
     response_model=PlanPublic,

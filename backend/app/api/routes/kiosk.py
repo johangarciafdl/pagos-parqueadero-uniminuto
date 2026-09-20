@@ -1,17 +1,19 @@
 from datetime import timedelta
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 
 from app import crud
-from app.api.deps import CurrentUser, SessionDep
+from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core import security
 from app.core.config import settings
+from app.core.qr import decode_qr_token, has_unlimited_access
 from app.core.rate_limit import check_login_rate_limit, record_failed_login
 from app.models import (
     KioskRegister,
     KioskRegisterResponse,
     KioskSession,
     QRSession,
+    StaffRegister,
     Token,
     UserPublic,
 )
@@ -49,6 +51,29 @@ def register(session: SessionDep, body: KioskRegister) -> KioskRegisterResponse:
     )
 
 
+@router.post(
+    "/register-staff",
+    response_model=KioskRegisterResponse,
+    dependencies=[Depends(get_current_active_superuser)],
+)
+def register_staff(session: SessionDep, body: StaffRegister) -> KioskRegisterResponse:
+    """Alta de personal de UNIMINUTO exento de pago del parqueadero.
+
+    Solo un administrador puede darla de alta.
+    """
+    existing = crud.get_user_by_student_id(session=session, student_id=body.student_id)
+    if existing:
+        raise HTTPException(
+            status_code=400, detail="Ya existe una cuenta con ese ID"
+        )
+    user = crud.create_staff_user(session=session, data=body)
+    return KioskRegisterResponse(
+        token=_issue_token(user.id),
+        qr_token=user.qr_token,
+        user=UserPublic.model_validate(user),
+    )
+
+
 @router.post("/session", response_model=Token)
 def session_by_student_id(
     request: Request, session: SessionDep, body: KioskSession
@@ -68,7 +93,7 @@ def session_by_student_id(
 
 @router.post("/qr-session", response_model=Token)
 def session_by_qr(request: Request, session: SessionDep, body: QRSession) -> Token:
-    """Reingreso mediante el QR personal (token de alta entropía, no el ID)."""
+    """Reingreso mediante el QR personal (JWT firmado, no el ID en claro)."""
     check_login_rate_limit(request)
     user = crud.get_user_by_qr_token(session=session, qr_token=body.qr_token)
     if not user or not user.is_active:
@@ -89,3 +114,27 @@ def regenerate_qr(session: SessionDep, current_user: CurrentUser) -> dict:
     """Invalida el QR anterior (por si se perdió/compartió) y genera uno nuevo."""
     user = crud.regenerate_qr_token(session=session, user=current_user)
     return {"qr_token": user.qr_token}
+
+
+@router.post(
+    "/verify-qr", dependencies=[Depends(get_current_active_superuser)]
+)
+def verify_qr(body: QRSession) -> dict:
+    """Lector virtual del parqueadero: decodifica el QR (mismo formato que
+    el lector físico real: nombre/apellido/rol/documento) y decide si se
+    permite el paso sin cobro (exento o con plan vigente).
+
+    Reservado a personal del parqueadero (cuenta de administrador) porque
+    expone datos personales de quien presente el QR.
+    """
+    payload = decode_qr_token(body.qr_token)
+    if not payload:
+        raise HTTPException(400, "QR inválido o expirado")
+    return {
+        "nombre": payload["nombre"],
+        "apellido": payload["apellido"],
+        "rol": payload["rol"],
+        "documento": payload["documento"],
+        "plan_until": payload["plan_until"],
+        "acceso_libre": has_unlimited_access(payload),
+    }

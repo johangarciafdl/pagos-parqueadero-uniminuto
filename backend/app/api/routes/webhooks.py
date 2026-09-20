@@ -5,6 +5,8 @@ from fastapi import APIRouter, HTTPException, Request
 from sqlmodel import select
 
 from app.api.deps import SessionDep
+from app.core.push import notify_plan_renewed
+from app.core.qr import create_qr_token
 from app.core.wompi import verify_event_signature
 from app.models import (
     ParkingLog,
@@ -15,6 +17,7 @@ from app.models import (
     PaymentStatusCode,
     Plan,
     Subscription,
+    User,
 )
 
 logger = logging.getLogger(__name__)
@@ -127,6 +130,7 @@ def _activate_or_renew_subscription(session: SessionDep, payment: Payment) -> No
         existing.end_date = existing.end_date + timedelta(days=plan.duration_days)
         session.add(existing)
         action = ParkingLogAction.PLAN_RENEWED
+        new_end_date = existing.end_date
     else:
         subscription = Subscription(
             user_id=payment.user_id,
@@ -138,6 +142,7 @@ def _activate_or_renew_subscription(session: SessionDep, payment: Payment) -> No
         )
         session.add(subscription)
         action = ParkingLogAction.PLAN_ACTIVATED
+        new_end_date = subscription.end_date
 
     session.add(
         ParkingLog(
@@ -147,3 +152,14 @@ def _activate_or_renew_subscription(session: SessionDep, payment: Payment) -> No
             detail=f"plan={plan.name}",
         )
     )
+
+    # El QR "cambia" al adquirir/renovar el plan: queda embebida la nueva
+    # fecha hasta la que puede entrar sin cobro diario (constitución: el QR
+    # refleja siempre el estado real del usuario, nunca queda desactualizado
+    # a propósito).
+    user = session.get(User, payment.user_id)
+    if user is not None:
+        user.plan_until = new_end_date
+        user.qr_token = create_qr_token(user)
+        session.add(user)
+        notify_plan_renewed(session, user, new_end_date)

@@ -1,4 +1,12 @@
-import { CalendarClock, CircleHelp, History, ParkingSquare, Users } from "lucide-react"
+import {
+  CalendarClock,
+  CircleHelp,
+  History,
+  ParkingSquare,
+  ScanLine,
+  UserPlus,
+  Users,
+} from "lucide-react"
 
 import { SidebarAppearance } from "@/components/Common/Appearance"
 import { Logo } from "@/components/Common/Logo"
@@ -23,7 +31,12 @@ export function AppSidebar() {
   const { user: currentUser } = useAuth()
 
   const items = currentUser?.is_superuser
-    ? [...baseItems, { icon: Users, title: "Admin", path: "/admin" }]
+    ? [
+        ...baseItems,
+        { icon: Users, title: "Admin", path: "/admin" },
+        { icon: UserPlus, title: "Registrar exento", path: "/staff-register" },
+        { icon: ScanLine, title: "Verificar QR", path: "/verify-qr" },
+      ]
     : baseItems
 
   return (

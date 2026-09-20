@@ -8,7 +8,7 @@ from tests.utils.utils import random_student_id
 
 def test_kiosk_register(client: TestClient, db: Session) -> None:
     student_id = random_student_id()
-    data = {"student_id": student_id, "full_name": "Estudiante de Prueba"}
+    data = {"student_id": student_id, "first_name": "Estudiante", "last_name": "de Prueba"}
     r = client.post(f"{settings.API_V1_STR}/kiosk/register", json=data)
     assert r.status_code == 200
     body = r.json()
@@ -26,13 +26,13 @@ def test_kiosk_register(client: TestClient, db: Session) -> None:
 
 def test_kiosk_register_duplicate_student_id(client: TestClient) -> None:
     student_id = random_student_id()
-    data = {"student_id": student_id, "full_name": "Uno"}
+    data = {"student_id": student_id, "first_name": "Uno", "last_name": "Apellido"}
     first = client.post(f"{settings.API_V1_STR}/kiosk/register", json=data)
     assert first.status_code == 200
 
     r = client.post(
         f"{settings.API_V1_STR}/kiosk/register",
-        json={"student_id": student_id, "full_name": "Otro"},
+        json={"student_id": student_id, "first_name": "Otro", "last_name": "Apellido"},
     )
     assert r.status_code == 400
 
@@ -41,7 +41,7 @@ def test_kiosk_session_by_student_id(client: TestClient) -> None:
     student_id = random_student_id()
     reg = client.post(
         f"{settings.API_V1_STR}/kiosk/register",
-        json={"student_id": student_id, "full_name": "Alguien"},
+        json={"student_id": student_id, "first_name": "Alguien", "last_name": "Apellido"},
     )
     assert reg.status_code == 200
 
@@ -64,7 +64,7 @@ def test_kiosk_session_by_qr(client: TestClient) -> None:
     student_id = random_student_id()
     reg = client.post(
         f"{settings.API_V1_STR}/kiosk/register",
-        json={"student_id": student_id, "full_name": "Alguien"},
+        json={"student_id": student_id, "first_name": "Alguien", "last_name": "Apellido"},
     )
     qr_token = reg.json()["qr_token"]
 
@@ -84,7 +84,7 @@ def test_kiosk_my_qr_and_regenerate(client: TestClient) -> None:
     student_id = random_student_id()
     reg = client.post(
         f"{settings.API_V1_STR}/kiosk/register",
-        json={"student_id": student_id, "full_name": "Alguien"},
+        json={"student_id": student_id, "first_name": "Alguien", "last_name": "Apellido"},
     )
     original_qr = reg.json()["qr_token"]
     token = reg.json()["token"]["access_token"]
@@ -106,3 +106,59 @@ def test_kiosk_my_qr_and_regenerate(client: TestClient) -> None:
         f"{settings.API_V1_STR}/kiosk/qr-session", json={"qr_token": original_qr}
     )
     assert old_qr_session.status_code == 404
+
+
+def test_register_staff_requires_superuser(client: TestClient) -> None:
+    r = client.post(
+        f"{settings.API_V1_STR}/kiosk/register-staff",
+        json={
+            "student_id": random_student_id(),
+            "first_name": "Vigilante",
+            "last_name": "Uno",
+        },
+    )
+    assert r.status_code == 401
+
+
+def test_register_staff_and_verify_qr_grants_free_access(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    student_id = random_student_id()
+    reg = client.post(
+        f"{settings.API_V1_STR}/kiosk/register-staff",
+        headers=superuser_token_headers,
+        json={"student_id": student_id, "first_name": "Vigilante", "last_name": "Dos"},
+    )
+    assert reg.status_code == 200
+    body = reg.json()
+    assert body["user"]["role"] == "EXENTO"
+    qr_token = body["qr_token"]
+
+    verify = client.post(
+        f"{settings.API_V1_STR}/kiosk/verify-qr",
+        headers=superuser_token_headers,
+        json={"qr_token": qr_token},
+    )
+    assert verify.status_code == 200
+    result = verify.json()
+    assert result["rol"] == "EXENTO"
+    assert result["documento"] == student_id
+    assert result["acceso_libre"] is True
+
+
+def test_verify_qr_denies_student_without_plan(client: TestClient) -> None:
+    reg = client.post(
+        f"{settings.API_V1_STR}/kiosk/register",
+        json={
+            "student_id": random_student_id(),
+            "first_name": "Sin",
+            "last_name": "Plan",
+        },
+    )
+    qr_token = reg.json()["qr_token"]
+
+    # sin superusuario no se puede usar el verificador
+    unauthorized = client.post(
+        f"{settings.API_V1_STR}/kiosk/verify-qr", json={"qr_token": qr_token}
+    )
+    assert unauthorized.status_code == 401
