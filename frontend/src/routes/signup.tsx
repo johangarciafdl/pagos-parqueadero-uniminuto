@@ -20,25 +20,33 @@ import { LoadingButton } from "@/components/ui/loading-button"
 import { PasswordInput } from "@/components/ui/password-input"
 import useAuth, { isLoggedIn } from "@/hooks/useAuth"
 
+const INSTITUTIONAL_DOMAIN = "@uniminuto.edu.co"
+
 const formSchema = z
   .object({
-    email: z.email({ message: "Invalid email address" }),
-    full_name: z.string().min(1, { message: "Full Name is required" }),
+    email: z
+      .email({ message: "Correo inválido" })
+      .refine((value) => value.toLowerCase().endsWith(INSTITUTIONAL_DOMAIN), {
+        message: `Debes usar tu correo institucional (${INSTITUTIONAL_DOMAIN})`,
+      }),
+    full_name: z.string().min(1, { message: "El nombre es requerido" }),
+    student_id: z.string().min(1, { message: "El ID de estudiante es requerido" }),
     password: z
       .string()
-      .min(1, { message: "Password is required" })
-      .min(8, { message: "Password must be at least 8 characters" }),
+      .min(1, { message: "La contraseña es requerida" })
+      .min(8, { message: "La contraseña debe tener al menos 8 caracteres" }),
     confirm_password: z
       .string()
-      .min(1, { message: "Password confirmation is required" }),
+      .min(1, { message: "Confirma tu contraseña" }),
   })
   .refine(
     (data: { password: string; confirm_password: string }) =>
       data.password === data.confirm_password,
     {
-    message: "The passwords don't match",
-    path: ["confirm_password"],
-  })
+      message: "Las contraseñas no coinciden",
+      path: ["confirm_password"],
+    },
+  )
 
 type FormData = z.infer<typeof formSchema>
 
@@ -54,7 +62,7 @@ export const Route = createFileRoute("/signup")({
   head: () => ({
     meta: [
       {
-        title: "Sign Up - FastAPI Template",
+        title: "Crear cuenta - Parqueadero UNIMINUTO",
       },
     ],
   }),
@@ -69,6 +77,7 @@ function SignUp() {
     defaultValues: {
       email: "",
       full_name: "",
+      student_id: "",
       password: "",
       confirm_password: "",
     },
@@ -77,7 +86,7 @@ function SignUp() {
   const onSubmit = (data: FormData) => {
     if (signUpMutation.isPending) return
 
-    // exclude confirm_password from submission data
+    // confirm_password no se envía al backend
     const { confirm_password: _confirm_password, ...submitData } = data
     signUpMutation.mutate(submitData)
   }
@@ -90,7 +99,10 @@ function SignUp() {
           className="flex flex-col gap-6"
         >
           <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-2xl font-bold">Create an account</h1>
+            <h1 className="text-2xl font-bold">Crear cuenta</h1>
+            <p className="text-muted-foreground text-sm">
+              Regístrate con tu correo institucional de UNIMINUTO
+            </p>
           </div>
 
           <div className="grid gap-4">
@@ -99,11 +111,30 @@ function SignUp() {
               name="full_name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Full Name</FormLabel>
+                  <FormLabel>Nombre completo</FormLabel>
                   <FormControl>
                     <Input
                       data-testid="full-name-input"
-                      placeholder="User"
+                      placeholder="Nombre y apellido"
+                      type="text"
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="student_id"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>ID / carné de estudiante</FormLabel>
+                  <FormControl>
+                    <Input
+                      data-testid="student-id-input"
+                      placeholder="Ej. 0000123456"
                       type="text"
                       {...field}
                     />
@@ -118,11 +149,11 @@ function SignUp() {
               name="email"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Email</FormLabel>
+                  <FormLabel>Correo institucional</FormLabel>
                   <FormControl>
                     <Input
                       data-testid="email-input"
-                      placeholder="user@example.com"
+                      placeholder={`usuario${INSTITUTIONAL_DOMAIN}`}
                       type="email"
                       {...field}
                     />
@@ -137,11 +168,11 @@ function SignUp() {
               name="password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Password</FormLabel>
+                  <FormLabel>Contraseña</FormLabel>
                   <FormControl>
                     <PasswordInput
                       data-testid="password-input"
-                      placeholder="Password"
+                      placeholder="Contraseña"
                       {...field}
                     />
                   </FormControl>
@@ -155,11 +186,11 @@ function SignUp() {
               name="confirm_password"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Confirm Password</FormLabel>
+                  <FormLabel>Confirmar contraseña</FormLabel>
                   <FormControl>
                     <PasswordInput
                       data-testid="confirm-password-input"
-                      placeholder="Confirm Password"
+                      placeholder="Confirmar contraseña"
                       {...field}
                     />
                   </FormControl>
@@ -173,14 +204,14 @@ function SignUp() {
               className="w-full"
               loading={signUpMutation.isPending}
             >
-              Sign Up
+              Crear cuenta
             </LoadingButton>
           </div>
 
           <div className="text-center text-sm">
-            Already have an account?{" "}
+            ¿Ya tienes cuenta?{" "}
             <RouterLink to="/login" className="underline underline-offset-4">
-              Log in
+              Inicia sesión
             </RouterLink>
           </div>
         </form>

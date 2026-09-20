@@ -629,6 +629,10 @@ export type UserCreate = {
      */
     full_name?: string | null;
     /**
+     * Student Id
+     */
+    student_id?: string | null;
+    /**
      * Password
      */
     password: string;
@@ -655,6 +659,10 @@ export type UserPublic = {
      */
     full_name?: string | null;
     /**
+     * Student Id
+     */
+    student_id?: string | null;
+    /**
      * Id
      */
     id: string;
@@ -680,6 +688,10 @@ export type UserRegister = {
      * Full Name
      */
     full_name?: string | null;
+    /**
+     * Student Id
+     */
+    student_id: string;
 };
 
 /**

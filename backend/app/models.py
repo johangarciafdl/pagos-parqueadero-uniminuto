@@ -2,7 +2,7 @@ import uuid
 from datetime import UTC, date, datetime
 from enum import StrEnum
 
-from pydantic import EmailStr
+from pydantic import EmailStr, field_validator
 from sqlalchemy import DateTime
 from sqlmodel import Field, Relationship, SQLModel
 
@@ -15,12 +15,18 @@ def get_datetime_utc() -> datetime:
 # Users (auth) — reutilizado del template, solo se quita la relación con Item
 # ---------------------------------------------------------------------------
 
+# Dominio institucional de UNIMINUTO. Solo se exige en el auto-registro
+# público (UserRegister): un superusuario administrador (creado por seed o
+# por otro admin vía UserCreate) puede seguir usando cualquier correo.
+INSTITUTIONAL_EMAIL_DOMAIN = "@uniminuto.edu.co"
+
 
 class UserBase(SQLModel):
     email: EmailStr = Field(unique=True, index=True, max_length=255)
     is_active: bool = True
     is_superuser: bool = False
     full_name: str | None = Field(default=None, max_length=255)
+    student_id: str | None = Field(default=None, max_length=20)
 
 
 class UserCreate(UserBase):
@@ -31,6 +37,17 @@ class UserRegister(SQLModel):
     email: EmailStr = Field(max_length=255)
     password: str = Field(min_length=8, max_length=128)
     full_name: str | None = Field(default=None, max_length=255)
+    student_id: str = Field(min_length=1, max_length=20)
+
+    @field_validator("email")
+    @classmethod
+    def _must_be_institutional_email(cls, value: str) -> str:
+        if not value.lower().endswith(INSTITUTIONAL_EMAIL_DOMAIN):
+            raise ValueError(
+                f"Debes registrarte con tu correo institucional "
+                f"({INSTITUTIONAL_EMAIL_DOMAIN})"
+            )
+        return value
 
 
 class UserUpdate(SQLModel):

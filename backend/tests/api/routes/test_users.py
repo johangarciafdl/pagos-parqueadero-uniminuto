@@ -9,7 +9,12 @@ from app.core.config import settings
 from app.core.security import verify_password
 from app.models import User, UserCreate
 from tests.utils.user import create_random_user
-from tests.utils.utils import random_email, random_lower_string
+from tests.utils.utils import (
+    random_email,
+    random_institutional_email,
+    random_lower_string,
+    random_student_id,
+)
 
 
 def test_get_users_superuser_me(
@@ -317,10 +322,16 @@ def test_update_password_me_same_password_error(
 
 
 def test_register_user(client: TestClient, db: Session) -> None:
-    username = random_email()
+    username = random_institutional_email()
     password = random_lower_string()
     full_name = random_lower_string()
-    data = {"email": username, "password": password, "full_name": full_name}
+    student_id = random_student_id()
+    data = {
+        "email": username,
+        "password": password,
+        "full_name": full_name,
+        "student_id": student_id,
+    }
     r = client.post(
         f"{settings.API_V1_STR}/users/signup",
         json=data,
@@ -340,19 +351,33 @@ def test_register_user(client: TestClient, db: Session) -> None:
 
 
 def test_register_user_already_exists_error(client: TestClient) -> None:
-    password = random_lower_string()
-    full_name = random_lower_string()
+    email = random_institutional_email()
     data = {
-        "email": settings.FIRST_SUPERUSER,
-        "password": password,
-        "full_name": full_name,
+        "email": email,
+        "password": random_lower_string(),
+        "full_name": random_lower_string(),
+        "student_id": random_student_id(),
     }
+    first = client.post(f"{settings.API_V1_STR}/users/signup", json=data)
+    assert first.status_code == 200
+
     r = client.post(
         f"{settings.API_V1_STR}/users/signup",
-        json=data,
+        json={**data, "student_id": random_student_id()},
     )
     assert r.status_code == 400
     assert r.json()["detail"] == "The user with this email already exists in the system"
+
+
+def test_register_user_non_institutional_email_error(client: TestClient) -> None:
+    data = {
+        "email": random_email(),
+        "password": random_lower_string(),
+        "full_name": random_lower_string(),
+        "student_id": random_student_id(),
+    }
+    r = client.post(f"{settings.API_V1_STR}/users/signup", json=data)
+    assert r.status_code == 422
 
 
 def test_update_user(
