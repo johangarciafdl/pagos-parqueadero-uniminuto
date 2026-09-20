@@ -4,41 +4,42 @@
 
 ## Día 1 — Setup + Foundational
 
-- [ ] T001 Levantar `compose.yml` local (Postgres + backend + frontend) y confirmar
-      `docker compose up -d` funciona.
-- [ ] T002 Configurar `.env` a partir de `.env.example`: `SECRET_KEY`, credenciales Postgres,
-      `WOMPI_PUBLIC_KEY`/`WOMPI_PRIVATE_KEY`/`WOMPI_EVENTS_SECRET` (sandbox), `BACKEND_CORS_ORIGINS`.
-- [ ] T003 [P] Confirmar que el login/registro de ejemplo del template funciona end-to-end
-      (usuario semilla del template) antes de tocar nada.
-- [ ] T004 `git init`, `.gitignore` (incluye `.env`, `node_modules/`, `__pycache__/`,
-      `.venv/`), primer commit "chore: bootstrap desde full-stack-fastapi-template + spec-kit".
-- [ ] T005 Reemplazar el modelo `Item` de `backend/app/models.py` por las entidades nuevas del
-      `plan.md` (Vehicle, PaymentMethodCatalog, PaymentStatusCatalog, Payment, Plan,
-      Subscription, ParkingLog, SupportTicket, FAQ) + generar migración Alembic.
-- [ ] T006 Sembrar catálogos (`PaymentMethodCatalog`, `PaymentStatusCatalog`) y tarifas base
-      ($5.000 carro, $2.800 moto) en `backend/app/initial_data.py`.
+- [x] T001 Postgres real levantado (contenedor local); pendiente probar el `compose.yml`
+      completo con Traefik (se validó backend+DB directo, más simple para desarrollo diario).
+- [x] T002 `.env` local configurado y probado (no commiteado); `.env.example` con placeholders
+      de Postgres, JWT y Wompi (sandbox) sí está en el repo.
+- [x] T003 [P] Login del template verificado end-to-end con el superusuario semilla.
+- [x] T004 `git init`, `.gitignore`, primer commit, repo remoto creado y sincronizado en
+      https://github.com/johangarciafdl/pagos-parqueadero-uniminuto.
+- [x] T005 Modelo `Item` reemplazado por el dominio completo del plan (incluye además
+      `VehicleType`/`PaymentMethod`/`PaymentStatus` como catálogos en BD, más fieles al
+      esquema original de 6 tablas que lo previsto). Migración inicial generada y aplicada
+      contra Postgres real (no escrita a mano).
+- [x] T006 Catálogos y tarifas ($5.000 carro, $2.800 moto) sembrados en `core/db.py`
+      (idempotente), verificado vía API.
 
-**Checkpoint**: proyecto corre local con la base de datos nueva migrada.
+**Checkpoint**: ✅ proyecto corre local con la base de datos nueva migrada.
 
 ---
 
 ## Día 2 — User Story 1 (Pago/recarga) — backend
 
-- [ ] T007 [US1] `backend/app/api/routes/payments.py`: endpoint `POST /payments/` que crea
-      `Payment(status=pending)` y calcula la firma de integridad de Wompi.
-- [ ] T008 [US1] `backend/app/api/routes/webhooks.py`: `POST /webhooks/wompi` público, valida
-      firma HMAC con `WOMPI_EVENTS_SECRET`, actualiza `Payment.status` de forma idempotente
-      (chequear `wompi_reference` ya procesada) y crea `ParkingLog`.
-- [ ] T009 [US1] `GET /payments/{id}` y `GET /payments/pending` (valor pendiente del usuario
-      autenticado, según su vehículo).
-- [ ] T010 [US1] Registrar routers nuevos en `backend/app/api/main.py`.
+- [x] T007 [US1] `payments.py`: `POST /payments/` calcula el monto SIEMPRE en el servidor
+      (catálogo/plan), nunca confía en un monto del cliente salvo en `RECHARGE`, y devuelve la
+      firma de integridad de Wompi.
+- [x] T008 [US1] `webhooks.py`: `POST /webhooks/wompi` público, valida firma HMAC, es
+      idempotente ante reintentos, y crea `ParkingLog`.
+- [x] T009 [US1] `GET /payments/{id}` y `GET /payments/pending`.
+- [x] T010 [US1] Routers registrados en `api/main.py` (incluye también `vehicles.py`, necesario
+      para poder probar pagos, que no estaba explícito en el plan original).
 
-**Checkpoint**: se puede crear un pago y simular un webhook con `curl`/Postman y ver el estado
-actualizarse en la base de datos.
+**Checkpoint**: ✅ verificado con curl contra Postgres real: firma inválida → 400; firma válida →
+pago aprobado; reintento del mismo webhook → idempotente; vehículo pagado ya no aparece en
+`/payments/pending`. Suite de tests del backend: 47 passed.
 
 ---
 
-## Día 3 — User Story 1 — frontend
+## Día 3 — User Story 1 — frontend (pendiente)
 
 - [ ] T011 [US1] Regenerar cliente OpenAPI (`frontend/openapi-ts.config.ts` + script del
       template) para tener tipos de los endpoints nuevos.
@@ -54,28 +55,30 @@ actualizarse en la base de datos.
 
 ## Día 4 — User Story 2 (Planes mensuales)
 
-- [ ] T015 [US2] `backend/app/api/routes/plans.py`: `GET /plans`, `POST /plans/{id}/subscribe`
-      (crea `Subscription` inactiva hasta confirmar pago, reutiliza el mismo flujo de Payment).
-- [ ] T016 [US2] Activación automática de la suscripción al recibir el webhook aprobado
-      (extender `webhooks.py`).
-- [ ] T017 [US2] `GET /subscriptions/me` (plan vigente) + lógica de renovación (extiende desde
-      `end_date` anterior, no desde hoy).
+- [x] T015 [US2] `plans.py`: `GET /plans` público, `POST /plans` y `PATCH /plans/{id}`
+      (solo superusuario, para administrar el catálogo desde ya).
+- [x] T016 [US2] Activación/renovación automática de la suscripción integrada en
+      `webhooks.py::_activate_or_renew_subscription` (renueva desde `end_date` anterior, no
+      desde hoy, para no perder días pagados).
+- [x] T017 [US2] `GET /plans/subscriptions/me` (plan vigente).
 - [ ] T018 [US2] Frontend: página "Planes mensuales" (listado, detalle, compra, plan vigente).
 
-**Checkpoint**: comprar un plan activa una suscripción real tras el webhook.
+**Checkpoint**: backend listo y con la lógica de renovación correcta; falta probar el flujo
+completo con webhook simulado (igual que se hizo para US1) y el frontend.
 
 ---
 
 ## Día 5 — User Story 3 (Historial) + User Story 4 (FAQ/soporte)
 
-- [ ] T019 [US3] `backend/app/api/routes/history.py`: `GET /history` con filtros de fecha,
-      estado y tipo, paginado.
+- [x] T019 [US3] `history.py`: `GET /history` con filtros de fecha/estado, paginado; además
+      `GET /history/log` (bitácora cruda de auditoría).
 - [ ] T020 [US3] Frontend: página "Historial" con filtros y descarga/consulta de comprobante.
-- [ ] T021 [US4] `backend/app/api/routes/faq.py` (CRUD simple) y `support.py` (crear ticket con
-      `case_number` único, listar por usuario, cambiar estado).
+- [x] T021 [US4] `faq.py` (CRUD, solo superusuario para escribir) y `support.py` (ticket con
+      `case_number` único vía `secrets.token_hex`, listar por usuario, cambiar estado).
 - [ ] T022 [US4] Frontend: página "FAQ y soporte" con categorías y formulario.
 
-**Checkpoint**: los 4 módulos del documento original están navegables end-to-end.
+**Checkpoint**: backend de los 4 módulos completo; falta el frontend completo (Días 3-5) y datos
+semilla de ejemplo para planes/FAQ.
 
 ---
 
@@ -84,11 +87,11 @@ actualizarse en la base de datos.
 - [ ] T023 Revisar checklist OWASP (`OWASP/CheatSheetSeries`) contra cada endpoint nuevo:
       autenticación, control de acceso (un usuario no puede ver pagos/historial de otro),
       validación de entrada.
-- [ ] T024 Confirmar que `webhooks.py` rechaza firmas inválidas y es idempotente (test manual con
-      el mismo payload dos veces).
+- [x] T024 Confirmado con curl real: firma inválida → 400; mismo payload dos veces →
+      `already_processed`, no reprocesa.
 - [ ] T025 Revisar CORS, rate limiting básico en login, y que ningún log imprima secretos.
-- [ ] T026 Auditoría de `.env`/`.gitignore`: confirmar que nunca se commiteó un secreto
-      (`git log -p -- .env` debe estar vacío).
+- [x] T026 Auditoría de `.env`/`.gitignore`: `git log -p --all -- '*.env'` no muestra ningún
+      secreto real, solo placeholders del `.env.example` commiteado.
 - [ ] T027 Backup/restore rápido de Postgres documentado en `docs-development-reference.md`.
 
 ---
