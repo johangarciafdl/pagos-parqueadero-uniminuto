@@ -33,4 +33,9 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
-app.frontend("/", directory=FRONTEND_DIR)
+
+if settings.FASTAPI_ENV != "development":
+    # En desarrollo el frontend corre aparte con Vite (ver frontend/.env
+    # VITE_API_URL); este mount solo aplica al contenedor de producción,
+    # donde el Dockerfile copia el build de Vite a app/frontend.
+    app.frontend("/", directory=FRONTEND_DIR)
