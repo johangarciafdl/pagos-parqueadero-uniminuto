@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
+import type { VehiclePublic, VehicleTypePublic } from "@/client"
 import { PaymentsService, VehiclesService } from "@/client"
 import { PendingVehicleCard } from "@/components/Parking/PendingVehicleCard"
 import { RegisterVehicleDialog } from "@/components/Parking/RegisterVehicleDialog"
@@ -27,14 +28,14 @@ function Dashboard() {
     queryFn: async () => (await VehiclesService.listMyVehicles()).data,
   })
 
-  const { data: pending = [] } = useQuery({
+  const { data: pending = [] } = useQuery<VehiclePublic[]>({
     queryKey: ["pending-vehicles"],
     queryFn: async () =>
       (await PaymentsService.listVehiclesWithPendingFee()).data ?? [],
   })
 
   const rateFor = (typeId: string) =>
-    vehicleTypes?.find((t) => t.id === typeId)?.daily_rate_cop ?? 0
+    vehicleTypes?.find((t: VehicleTypePublic) => t.id === typeId)?.daily_rate_cop ?? 0
   const hasVehicles = (myVehicles?.data.length ?? 0) > 0
 
   return (
@@ -66,7 +67,7 @@ function Dashboard() {
           </p>
         )}
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {pending.map((vehicle) => (
+          {pending.map((vehicle: VehiclePublic) => (
             <PendingVehicleCard
               key={vehicle.id}
               vehicle={vehicle}

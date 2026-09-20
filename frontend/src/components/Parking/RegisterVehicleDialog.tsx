@@ -5,7 +5,8 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type VehicleCreate, VehiclesService } from "@/client"
+import type { VehicleCreate, VehicleTypePublic } from "@/client"
+import { VehiclesService } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -122,7 +123,7 @@ export function RegisterVehicleDialog() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {vehicleTypes?.map((type) => (
+                        {vehicleTypes?.map((type: VehicleTypePublic) => (
                           <SelectItem key={type.id} value={type.id}>
                             {type.name}
                           </SelectItem>

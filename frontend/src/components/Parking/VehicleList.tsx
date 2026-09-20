@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
 import { Trash2 } from "lucide-react"
 
+import type { VehiclePublic, VehicleTypePublic } from "@/client"
 import { VehiclesService } from "@/client"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -33,11 +34,11 @@ export function VehicleList() {
   if (!vehicles?.data.length) return null
 
   const typeName = (typeId: string) =>
-    vehicleTypes?.find((t) => t.id === typeId)?.name ?? ""
+    vehicleTypes?.find((t: VehicleTypePublic) => t.id === typeId)?.name ?? ""
 
   return (
     <div className="flex flex-wrap gap-2">
-      {vehicles.data.map((vehicle) => (
+      {vehicles.data.map((vehicle: VehiclePublic) => (
         <Badge key={vehicle.id} variant="secondary" className="gap-2 py-1.5 pl-3 pr-1.5">
           {vehicle.plate} · {typeName(vehicle.type_id)}
           <Button

@@ -39,17 +39,25 @@ pago aprobado; reintento del mismo webhook → idempotente; vehículo pagado ya 
 
 ---
 
-## Día 3 — User Story 1 — frontend (pendiente)
+## Día 3 — User Story 1 — frontend
 
-- [ ] T011 [US1] Regenerar cliente OpenAPI (`frontend/openapi-ts.config.ts` + script del
-      template) para tener tipos de los endpoints nuevos.
-- [ ] T012 [US1] Página "Pago/recarga" (dashboard principal): muestra usuario, vehículo, valor
-      pendiente, selector de método, resumen antes de pagar.
-- [ ] T013 [US1] Integración con el Widget/Checkout de Wompi usando la firma que entrega el
-      backend.
-- [ ] T014 [US1] Vista de resultado (aprobado/pendiente/rechazado) + comprobante con referencia.
+- [x] T011 [US1] Cliente OpenAPI regenerado (`npx openapi-ts`) contra el backend real; nombres
+      de servicios/métodos verificados (`PaymentsService`, `VehiclesService`, etc.).
+- [x] T012 [US1] Página "Pago/recarga" (`routes/_layout/index.tsx`): saludo, registrar
+      vehículo, valor pendiente por vehículo, selector de método.
+- [x] T013 [US1] `hooks/useWompiCheckout.ts`: abre el Widget Checkout de Wompi con la firma del
+      backend; nunca confía en el resultado del widget, siempre refresca desde el backend.
+- [ ] T014 [US1] Vista de comprobante detallada (por ahora el historial ya muestra
+      referencia/estado; falta una vista dedicada de "comprobante" si se requiere para la
+      sustentación).
 
-**Checkpoint**: flujo de pago completo en sandbox, de principio a fin, en el navegador.
+**Checkpoint**: ✅ Verificado con Playwright (headless Chrome) contra el backend y Postgres
+reales: login → dashboard carga sin errores de consola, todas las llamadas a la API devuelven
+200, y el estado vacío ("Registra un vehículo...") se renderiza correctamente. Nota operativa
+importante: `pytest`/`scripts/test.sh` borran todos los usuarios al terminar (fixture
+`conftest.py`); **nunca correr la suite de tests apuntando al `DATABASE_URL` de desarrollo**,
+usar una base de datos de pruebas separada o aceptar que hay que re-sembrar (`python -m
+app.initial_data`) después.
 
 ---
 
@@ -84,12 +92,17 @@ semilla de ejemplo para planes/FAQ.
 
 ## Día 6 — Endurecimiento de seguridad (constitución, principio I)
 
-- [ ] T023 Revisar checklist OWASP (`OWASP/CheatSheetSeries`) contra cada endpoint nuevo:
-      autenticación, control de acceso (un usuario no puede ver pagos/historial de otro),
-      validación de entrada.
+- [x] T023 Auditoría de autenticación/autorización en todas las rutas: todo endpoint que
+      expone datos de un usuario exige `CurrentUser` y filtra por `user_id`/`owner_id` (pagos,
+      vehículos, historial, tickets); los únicos endpoints sin JWT son catálogos públicos
+      (planes, FAQ, métodos de pago) y el webhook (protegido por firma HMAC, no por JWT).
+      100% de las consultas van por SQLModel/SQLAlchemy parametrizado (cero SQL crudo).
 - [x] T024 Confirmado con curl real: firma inválida → 400; mismo payload dos veces →
       `already_processed`, no reprocesa.
-- [ ] T025 Revisar CORS, rate limiting básico en login, y que ningún log imprima secretos.
+- [x] T025 CORS restringido a `settings.FRONTEND_HOST` (un solo origen, no wildcard). Rate
+      limiting agregado en `/login/access-token` (solo cuenta fallos, 5/min por IP, verificado
+      con curl: intento 6 → 429). Ningún log imprime contraseñas/tokens/llaves (revisado
+      manualmente en `crud.py`, `security.py`, `wompi.py`).
 - [x] T026 Auditoría de `.env`/`.gitignore`: `git log -p --all -- '*.env'` no muestra ningún
       secreto real, solo placeholders del `.env.example` commiteado.
 - [ ] T027 Backup/restore rápido de Postgres documentado en `docs-development-reference.md`.

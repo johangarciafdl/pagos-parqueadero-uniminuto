@@ -2,7 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
 
-import type { PaymentStatusCode } from "@/client"
+import type { PaymentPublic, PaymentStatusCode } from "@/client"
 import { HistoryService } from "@/client"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -130,7 +130,7 @@ function HistoryPage() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {data?.data.map((payment) => (
+          {data?.data.map((payment: PaymentPublic) => (
             <TableRow key={payment.id}>
               <TableCell>{formatDateTime(payment.created_at)}</TableCell>
               <TableCell>{CONCEPT_LABEL[payment.concept] ?? payment.concept}</TableCell>

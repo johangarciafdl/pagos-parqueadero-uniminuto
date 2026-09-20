@@ -5,7 +5,8 @@ import { useState } from "react"
 import { useForm } from "react-hook-form"
 import { z } from "zod"
 
-import { type SupportTicketCreate, SupportService } from "@/client"
+import type { SupportTicketCreate, SupportTicketPublic } from "@/client"
+import { SupportService } from "@/client"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,
@@ -50,7 +51,7 @@ export function NewTicketDialog() {
   const mutation = useMutation({
     mutationFn: (data: SupportTicketCreate) =>
       SupportService.createTicket({ body: data }),
-    onSuccess: (response) => {
+    onSuccess: (response: { data?: SupportTicketPublic }) => {
       showSuccessToast(`Solicitud creada: caso ${response.data?.case_number}`)
       form.reset()
       setIsOpen(false)

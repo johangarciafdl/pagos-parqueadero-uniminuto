@@ -39,7 +39,10 @@ const formSchema = z
       .string()
       .min(1, { message: "Password confirmation is required" }),
   })
-  .refine((data) => data.new_password === data.confirm_password, {
+  .refine(
+    (data: { new_password: string; confirm_password: string }) =>
+      data.new_password === data.confirm_password,
+    {
     message: "The passwords don't match",
     path: ["confirm_password"],
   })
@@ -48,8 +51,8 @@ type FormData = z.infer<typeof formSchema>
 
 export const Route = createFileRoute("/reset-password")({
   component: ResetPassword,
-  validateSearch: searchSchema,
-  beforeLoad: async ({ search }) => {
+  validateSearch: (search: Record<string, unknown>) => searchSchema.parse(search),
+  beforeLoad: async ({ search }: { search: { token: string } }) => {
     if (isLoggedIn()) {
       throw redirect({ to: "/" })
     }

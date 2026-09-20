@@ -2,7 +2,7 @@
 
 import { type Client, type Options as Options2, type TDataShape, urlSearchParamsBodySerializer } from './client';
 import { client } from './client.gen';
-import type { itemsCreateItemData, itemsCreateItemErrors, itemsCreateItemResponses, itemsDeleteItemData, itemsDeleteItemErrors, itemsDeleteItemResponses, itemsReadItemData, itemsReadItemErrors, itemsReadItemResponses, itemsReadItemsData, itemsReadItemsErrors, itemsReadItemsResponses, itemsUpdateItemData, itemsUpdateItemErrors, itemsUpdateItemResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses } from './types.gen';
+import type { faqCreateFaqData, faqCreateFaqErrors, faqCreateFaqResponses, faqDeleteFaqData, faqDeleteFaqErrors, faqDeleteFaqResponses, faqListFaqData, faqListFaqErrors, faqListFaqResponses, faqUpdateFaqData, faqUpdateFaqErrors, faqUpdateFaqResponses, historyGetParkingLogData, historyGetParkingLogErrors, historyGetParkingLogResponses, historyGetPaymentHistoryData, historyGetPaymentHistoryErrors, historyGetPaymentHistoryResponses, loginLoginAccessTokenData, loginLoginAccessTokenErrors, loginLoginAccessTokenResponses, loginRecoverPasswordData, loginRecoverPasswordErrors, loginRecoverPasswordHtmlContentData, loginRecoverPasswordHtmlContentErrors, loginRecoverPasswordHtmlContentResponses, loginRecoverPasswordResponses, loginResetPasswordData, loginResetPasswordErrors, loginResetPasswordResponses, loginTestTokenData, loginTestTokenResponses, paymentsCreatePaymentData, paymentsCreatePaymentErrors, paymentsCreatePaymentResponses, paymentsGetPaymentData, paymentsGetPaymentErrors, paymentsGetPaymentResponses, paymentsListPaymentMethodsData, paymentsListPaymentMethodsResponses, paymentsListVehiclesWithPendingFeeData, paymentsListVehiclesWithPendingFeeResponses, plansCreatePlanData, plansCreatePlanErrors, plansCreatePlanResponses, plansListPlansData, plansListPlansResponses, plansMyActiveSubscriptionData, plansMyActiveSubscriptionResponses, plansUpdatePlanData, plansUpdatePlanErrors, plansUpdatePlanResponses, privateCreateUserData, privateCreateUserErrors, privateCreateUserResponses, supportCreateTicketData, supportCreateTicketErrors, supportCreateTicketResponses, supportListMyTicketsData, supportListMyTicketsResponses, supportUpdateTicketStatusData, supportUpdateTicketStatusErrors, supportUpdateTicketStatusResponses, usersCreateUserData, usersCreateUserErrors, usersCreateUserResponses, usersDeleteUserData, usersDeleteUserErrors, usersDeleteUserMeData, usersDeleteUserMeResponses, usersDeleteUserResponses, usersReadUserByIdData, usersReadUserByIdErrors, usersReadUserByIdResponses, usersReadUserMeData, usersReadUserMeResponses, usersReadUsersData, usersReadUsersErrors, usersReadUsersResponses, usersRegisterUserData, usersRegisterUserErrors, usersRegisterUserResponses, usersUpdatePasswordMeData, usersUpdatePasswordMeErrors, usersUpdatePasswordMeResponses, usersUpdateUserData, usersUpdateUserErrors, usersUpdateUserMeData, usersUpdateUserMeErrors, usersUpdateUserMeResponses, usersUpdateUserResponses, utilsHealthCheckData, utilsHealthCheckResponses, utilsTestEmailData, utilsTestEmailErrors, utilsTestEmailResponses, vehiclesDeleteVehicleData, vehiclesDeleteVehicleErrors, vehiclesDeleteVehicleResponses, vehiclesListMyVehiclesData, vehiclesListMyVehiclesResponses, vehiclesListVehicleTypesData, vehiclesListVehicleTypesResponses, vehiclesRegisterVehicleData, vehiclesRegisterVehicleErrors, vehiclesRegisterVehicleResponses, webhooksWompiWebhookData, webhooksWompiWebhookResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -284,31 +284,27 @@ export class UtilsService {
     }
 }
 
-export class ItemsService {
+export class VehiclesService {
     /**
-     * Read Items
-     *
-     * Retrieve items.
+     * List My Vehicles
      */
-    public static readItems<ThrowOnError extends boolean = true>(options?: Options<itemsReadItemsData, ThrowOnError>) {
-        return (options?.client ?? client).get<itemsReadItemsResponses, itemsReadItemsErrors, ThrowOnError>({
+    public static listMyVehicles<ThrowOnError extends boolean = true>(options?: Options<vehiclesListMyVehiclesData, ThrowOnError>) {
+        return (options?.client ?? client).get<vehiclesListMyVehiclesResponses, unknown, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
-            url: '/api/v1/items/',
+            url: '/api/v1/vehicles/',
             ...options
         });
     }
     
     /**
-     * Create Item
-     *
-     * Create new item.
+     * Register Vehicle
      */
-    public static createItem<ThrowOnError extends boolean = true>(options: Options<itemsCreateItemData, ThrowOnError>) {
-        return (options.client ?? client).post<itemsCreateItemResponses, itemsCreateItemErrors, ThrowOnError>({
+    public static registerVehicle<ThrowOnError extends boolean = true>(options: Options<vehiclesRegisterVehicleData, ThrowOnError>) {
+        return (options.client ?? client).post<vehiclesRegisterVehicleResponses, vehiclesRegisterVehicleErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
-            url: '/api/v1/items/',
+            url: '/api/v1/vehicles/',
             ...options,
             headers: {
                 'Content-Type': 'application/json',
@@ -318,43 +314,277 @@ export class ItemsService {
     }
     
     /**
-     * Delete Item
-     *
-     * Delete an item.
+     * List Vehicle Types
      */
-    public static deleteItem<ThrowOnError extends boolean = true>(options: Options<itemsDeleteItemData, ThrowOnError>) {
-        return (options.client ?? client).delete<itemsDeleteItemResponses, itemsDeleteItemErrors, ThrowOnError>({
+    public static listVehicleTypes<ThrowOnError extends boolean = true>(options?: Options<vehiclesListVehicleTypesData, ThrowOnError>) {
+        return (options?.client ?? client).get<vehiclesListVehicleTypesResponses, unknown, ThrowOnError>({
             responseType: 'json',
-            security: [{ scheme: 'bearer', type: 'http' }],
-            url: '/api/v1/items/{id}',
+            url: '/api/v1/vehicles/types',
             ...options
         });
     }
     
     /**
-     * Read Item
-     *
-     * Get item by ID.
+     * Delete Vehicle
      */
-    public static readItem<ThrowOnError extends boolean = true>(options: Options<itemsReadItemData, ThrowOnError>) {
-        return (options.client ?? client).get<itemsReadItemResponses, itemsReadItemErrors, ThrowOnError>({
+    public static deleteVehicle<ThrowOnError extends boolean = true>(options: Options<vehiclesDeleteVehicleData, ThrowOnError>) {
+        return (options.client ?? client).delete<vehiclesDeleteVehicleResponses, vehiclesDeleteVehicleErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
-            url: '/api/v1/items/{id}',
+            url: '/api/v1/vehicles/{vehicle_id}',
+            ...options
+        });
+    }
+}
+
+export class PaymentsService {
+    /**
+     * List Payment Methods
+     */
+    public static listPaymentMethods<ThrowOnError extends boolean = true>(options?: Options<paymentsListPaymentMethodsData, ThrowOnError>) {
+        return (options?.client ?? client).get<paymentsListPaymentMethodsResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/payments/methods',
             ...options
         });
     }
     
     /**
-     * Update Item
-     *
-     * Update an item.
+     * Create Payment
      */
-    public static updateItem<ThrowOnError extends boolean = true>(options: Options<itemsUpdateItemData, ThrowOnError>) {
-        return (options.client ?? client).put<itemsUpdateItemResponses, itemsUpdateItemErrors, ThrowOnError>({
+    public static createPayment<ThrowOnError extends boolean = true>(options: Options<paymentsCreatePaymentData, ThrowOnError>) {
+        return (options.client ?? client).post<paymentsCreatePaymentResponses, paymentsCreatePaymentErrors, ThrowOnError>({
             responseType: 'json',
             security: [{ scheme: 'bearer', type: 'http' }],
-            url: '/api/v1/items/{id}',
+            url: '/api/v1/payments/',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * List Vehicles With Pending Fee
+     *
+     * Vehículos del usuario sin un pago de tarifa diaria aprobado hoy.
+     */
+    public static listVehiclesWithPendingFee<ThrowOnError extends boolean = true>(options?: Options<paymentsListVehiclesWithPendingFeeData, ThrowOnError>) {
+        return (options?.client ?? client).get<paymentsListVehiclesWithPendingFeeResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/payments/pending',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Payment
+     */
+    public static getPayment<ThrowOnError extends boolean = true>(options: Options<paymentsGetPaymentData, ThrowOnError>) {
+        return (options.client ?? client).get<paymentsGetPaymentResponses, paymentsGetPaymentErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/payments/{payment_id}',
+            ...options
+        });
+    }
+}
+
+export class WebhooksService {
+    /**
+     * Wompi Webhook
+     */
+    public static wompiWebhook<ThrowOnError extends boolean = true>(options?: Options<webhooksWompiWebhookData, ThrowOnError>) {
+        return (options?.client ?? client).post<webhooksWompiWebhookResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/webhooks/wompi',
+            ...options
+        });
+    }
+}
+
+export class PlansService {
+    /**
+     * List Plans
+     */
+    public static listPlans<ThrowOnError extends boolean = true>(options?: Options<plansListPlansData, ThrowOnError>) {
+        return (options?.client ?? client).get<plansListPlansResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/plans/',
+            ...options
+        });
+    }
+    
+    /**
+     * Create Plan
+     */
+    public static createPlan<ThrowOnError extends boolean = true>(options: Options<plansCreatePlanData, ThrowOnError>) {
+        return (options.client ?? client).post<plansCreatePlanResponses, plansCreatePlanErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/plans/',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Update Plan
+     */
+    public static updatePlan<ThrowOnError extends boolean = true>(options: Options<plansUpdatePlanData, ThrowOnError>) {
+        return (options.client ?? client).patch<plansUpdatePlanResponses, plansUpdatePlanErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/plans/{plan_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * My Active Subscription
+     */
+    public static myActiveSubscription<ThrowOnError extends boolean = true>(options?: Options<plansMyActiveSubscriptionData, ThrowOnError>) {
+        return (options?.client ?? client).get<plansMyActiveSubscriptionResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/plans/subscriptions/me',
+            ...options
+        });
+    }
+}
+
+export class HistoryService {
+    /**
+     * Get Payment History
+     */
+    public static getPaymentHistory<ThrowOnError extends boolean = true>(options?: Options<historyGetPaymentHistoryData, ThrowOnError>) {
+        return (options?.client ?? client).get<historyGetPaymentHistoryResponses, historyGetPaymentHistoryErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/history/',
+            ...options
+        });
+    }
+    
+    /**
+     * Get Parking Log
+     *
+     * Bitácora de trazabilidad cruda (para soporte/auditoría del propio
+     * usuario), complementaria al historial de pagos.
+     */
+    public static getParkingLog<ThrowOnError extends boolean = true>(options?: Options<historyGetParkingLogData, ThrowOnError>) {
+        return (options?.client ?? client).get<historyGetParkingLogResponses, historyGetParkingLogErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/history/log',
+            ...options
+        });
+    }
+}
+
+export class FaqService {
+    /**
+     * List Faq
+     */
+    public static listFaq<ThrowOnError extends boolean = true>(options?: Options<faqListFaqData, ThrowOnError>) {
+        return (options?.client ?? client).get<faqListFaqResponses, faqListFaqErrors, ThrowOnError>({
+            responseType: 'json',
+            url: '/api/v1/faq/',
+            ...options
+        });
+    }
+    
+    /**
+     * Create Faq
+     */
+    public static createFaq<ThrowOnError extends boolean = true>(options: Options<faqCreateFaqData, ThrowOnError>) {
+        return (options.client ?? client).post<faqCreateFaqResponses, faqCreateFaqErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/faq/',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Delete Faq
+     */
+    public static deleteFaq<ThrowOnError extends boolean = true>(options: Options<faqDeleteFaqData, ThrowOnError>) {
+        return (options.client ?? client).delete<faqDeleteFaqResponses, faqDeleteFaqErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/faq/{faq_id}',
+            ...options
+        });
+    }
+    
+    /**
+     * Update Faq
+     */
+    public static updateFaq<ThrowOnError extends boolean = true>(options: Options<faqUpdateFaqData, ThrowOnError>) {
+        return (options.client ?? client).patch<faqUpdateFaqResponses, faqUpdateFaqErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/faq/{faq_id}',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+}
+
+export class SupportService {
+    /**
+     * List My Tickets
+     */
+    public static listMyTickets<ThrowOnError extends boolean = true>(options?: Options<supportListMyTicketsData, ThrowOnError>) {
+        return (options?.client ?? client).get<supportListMyTicketsResponses, unknown, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/support/',
+            ...options
+        });
+    }
+    
+    /**
+     * Create Ticket
+     */
+    public static createTicket<ThrowOnError extends boolean = true>(options: Options<supportCreateTicketData, ThrowOnError>) {
+        return (options.client ?? client).post<supportCreateTicketResponses, supportCreateTicketErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/support/',
+            ...options,
+            headers: {
+                'Content-Type': 'application/json',
+                ...options.headers
+            }
+        });
+    }
+    
+    /**
+     * Update Ticket Status
+     */
+    public static updateTicketStatus<ThrowOnError extends boolean = true>(options: Options<supportUpdateTicketStatusData, ThrowOnError>) {
+        return (options.client ?? client).patch<supportUpdateTicketStatusResponses, supportUpdateTicketStatusErrors, ThrowOnError>({
+            responseType: 'json',
+            security: [{ scheme: 'bearer', type: 'http' }],
+            url: '/api/v1/support/{ticket_id}/status',
             ...options,
             headers: {
                 'Content-Type': 'application/json',

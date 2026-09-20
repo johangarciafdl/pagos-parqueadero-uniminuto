@@ -56,7 +56,7 @@ export function PendingVehicleCard({ vehicle, dailyRateCOP }: Props) {
             <SelectValue placeholder="Método de pago" />
           </SelectTrigger>
           <SelectContent>
-            {methods?.map((method) => (
+            {methods?.map((method: PaymentMethodPublic) => (
               <SelectItem key={method.id} value={method.id}>
                 {method.name}
               </SelectItem>

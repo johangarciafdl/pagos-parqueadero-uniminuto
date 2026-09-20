@@ -35,6 +35,90 @@ export type Body_login_login_access_token = {
 };
 
 /**
+ * FAQCreate
+ */
+export type FAQCreate = {
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Question
+     */
+    question: string;
+    /**
+     * Answer
+     */
+    answer: string;
+    /**
+     * Display Order
+     */
+    display_order?: number;
+};
+
+/**
+ * FAQPublic
+ */
+export type FAQPublic = {
+    /**
+     * Category
+     */
+    category: string;
+    /**
+     * Question
+     */
+    question: string;
+    /**
+     * Answer
+     */
+    answer: string;
+    /**
+     * Display Order
+     */
+    display_order?: number;
+    /**
+     * Id
+     */
+    id: string;
+};
+
+/**
+ * FAQUpdate
+ */
+export type FAQUpdate = {
+    /**
+     * Category
+     */
+    category?: string | null;
+    /**
+     * Question
+     */
+    question?: string | null;
+    /**
+     * Answer
+     */
+    answer?: string | null;
+    /**
+     * Display Order
+     */
+    display_order?: number | null;
+};
+
+/**
+ * FAQsPublic
+ */
+export type FAQsPublic = {
+    /**
+     * Data
+     */
+    data: Array<FAQPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * HTTPValidationError
  */
 export type HTTPValidationError = {
@@ -42,74 +126,6 @@ export type HTTPValidationError = {
      * Detail
      */
     detail?: Array<ValidationError>;
-};
-
-/**
- * ItemCreate
- */
-export type ItemCreate = {
-    /**
-     * Title
-     */
-    title: string;
-    /**
-     * Description
-     */
-    description?: string | null;
-};
-
-/**
- * ItemPublic
- */
-export type ItemPublic = {
-    /**
-     * Title
-     */
-    title: string;
-    /**
-     * Description
-     */
-    description?: string | null;
-    /**
-     * Id
-     */
-    id: string;
-    /**
-     * Owner Id
-     */
-    owner_id: string;
-    /**
-     * Created At
-     */
-    created_at?: string | null;
-};
-
-/**
- * ItemUpdate
- */
-export type ItemUpdate = {
-    /**
-     * Title
-     */
-    title?: string | null;
-    /**
-     * Description
-     */
-    description?: string | null;
-};
-
-/**
- * ItemsPublic
- */
-export type ItemsPublic = {
-    /**
-     * Data
-     */
-    data: Array<ItemPublic>;
-    /**
-     * Count
-     */
-    count: number;
 };
 
 /**
@@ -137,6 +153,315 @@ export type NewPassword = {
 };
 
 /**
+ * ParkingLogAction
+ */
+export type ParkingLogAction = 'payment_created' | 'payment_approved' | 'payment_declined' | 'plan_activated' | 'plan_renewed';
+
+/**
+ * ParkingLogPublic
+ */
+export type ParkingLogPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Payment Id
+     */
+    payment_id: string | null;
+    action: ParkingLogAction;
+    /**
+     * Detail
+     */
+    detail: string | null;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * ParkingLogsPublic
+ */
+export type ParkingLogsPublic = {
+    /**
+     * Data
+     */
+    data: Array<ParkingLogPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * PaymentConcept
+ */
+export type PaymentConcept = 'daily_fee' | 'recharge' | 'plan_purchase' | 'plan_renewal';
+
+/**
+ * PaymentInitiate
+ *
+ * Lo único que el cliente puede pedir: qué quiere pagar, no cuánto ni el
+ * estado. La excepción es `amount_cop`, que solo se usa (y solo tiene
+ * sentido) para el concepto RECHARGE, donde el monto es una elección
+ * legítima del usuario; para cualquier otro concepto el servidor lo ignora
+ * y calcula el monto real a partir del catálogo correspondiente.
+ */
+export type PaymentInitiate = {
+    concept: PaymentConcept;
+    /**
+     * Method Id
+     */
+    method_id: string;
+    /**
+     * Vehicle Id
+     */
+    vehicle_id?: string | null;
+    /**
+     * Plan Id
+     */
+    plan_id?: string | null;
+    /**
+     * Amount Cop
+     */
+    amount_cop?: number | null;
+};
+
+/**
+ * PaymentInitiateResponse
+ */
+export type PaymentInitiateResponse = {
+    /**
+     * Id
+     */
+    id: string;
+    concept: PaymentConcept;
+    /**
+     * Amount Cop
+     */
+    amount_cop: number;
+    /**
+     * Method Code
+     */
+    method_code: string;
+    /**
+     * Method Name
+     */
+    method_name: string;
+    status_code: PaymentStatusCode;
+    /**
+     * Wompi Reference
+     */
+    wompi_reference: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+    /**
+     * Wompi Public Key
+     */
+    wompi_public_key: string;
+    /**
+     * Amount In Cents
+     */
+    amount_in_cents: number;
+    /**
+     * Integrity Signature
+     */
+    integrity_signature: string;
+    /**
+     * Redirect Url
+     */
+    redirect_url: string;
+};
+
+/**
+ * PaymentMethodPublic
+ */
+export type PaymentMethodPublic = {
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Enabled
+     */
+    enabled?: boolean;
+    /**
+     * Id
+     */
+    id: string;
+};
+
+/**
+ * PaymentPublic
+ */
+export type PaymentPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    concept: PaymentConcept;
+    /**
+     * Amount Cop
+     */
+    amount_cop: number;
+    /**
+     * Method Code
+     */
+    method_code: string;
+    /**
+     * Method Name
+     */
+    method_name: string;
+    status_code: PaymentStatusCode;
+    /**
+     * Wompi Reference
+     */
+    wompi_reference: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+};
+
+/**
+ * PaymentStatusCode
+ */
+export type PaymentStatusCode = 'pending' | 'approved' | 'declined' | 'cancelled';
+
+/**
+ * PaymentsPublic
+ */
+export type PaymentsPublic = {
+    /**
+     * Data
+     */
+    data: Array<PaymentPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
+ * PlanCreate
+ */
+export type PlanCreate = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Price Cop
+     */
+    price_cop: number;
+    /**
+     * Duration Days
+     */
+    duration_days: number;
+    /**
+     * Conditions
+     */
+    conditions?: string | null;
+    /**
+     * Active
+     */
+    active?: boolean;
+    /**
+     * Vehicle Type Id
+     */
+    vehicle_type_id: string;
+};
+
+/**
+ * PlanPublic
+ */
+export type PlanPublic = {
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Price Cop
+     */
+    price_cop: number;
+    /**
+     * Duration Days
+     */
+    duration_days: number;
+    /**
+     * Conditions
+     */
+    conditions?: string | null;
+    /**
+     * Active
+     */
+    active?: boolean;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Vehicle Type Id
+     */
+    vehicle_type_id: string;
+};
+
+/**
+ * PlanUpdate
+ */
+export type PlanUpdate = {
+    /**
+     * Name
+     */
+    name?: string | null;
+    /**
+     * Price Cop
+     */
+    price_cop?: number | null;
+    /**
+     * Duration Days
+     */
+    duration_days?: number | null;
+    /**
+     * Conditions
+     */
+    conditions?: string | null;
+    /**
+     * Active
+     */
+    active?: boolean | null;
+};
+
+/**
+ * PlansPublic
+ */
+export type PlansPublic = {
+    /**
+     * Data
+     */
+    data: Array<PlanPublic>;
+    /**
+     * Count
+     */
+    count: number;
+};
+
+/**
  * PrivateUserCreate
  */
 export type PrivateUserCreate = {
@@ -156,6 +481,103 @@ export type PrivateUserCreate = {
      * Is Verified
      */
     is_verified?: boolean;
+};
+
+/**
+ * SubscriptionPublic
+ */
+export type SubscriptionPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Plan Id
+     */
+    plan_id: string;
+    /**
+     * Start Date
+     */
+    start_date: string;
+    /**
+     * End Date
+     */
+    end_date: string;
+    /**
+     * Active
+     */
+    active: boolean;
+};
+
+/**
+ * SupportTicketCreate
+ */
+export type SupportTicketCreate = {
+    /**
+     * Subject
+     */
+    subject: string;
+    /**
+     * Message
+     */
+    message: string;
+};
+
+/**
+ * SupportTicketPublic
+ */
+export type SupportTicketPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Case Number
+     */
+    case_number: string;
+    /**
+     * Subject
+     */
+    subject: string;
+    /**
+     * Message
+     */
+    message: string;
+    status: SupportTicketStatus;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+};
+
+/**
+ * SupportTicketStatus
+ */
+export type SupportTicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed';
+
+/**
+ * SupportTicketUpdateStatus
+ */
+export type SupportTicketUpdateStatus = {
+    status: SupportTicketStatus;
+};
+
+/**
+ * SupportTicketsPublic
+ */
+export type SupportTicketsPublic = {
+    /**
+     * Data
+     */
+    data: Array<SupportTicketPublic>;
+    /**
+     * Count
+     */
+    count: number;
 };
 
 /**
@@ -340,6 +762,82 @@ export type ValidationError = {
     ctx?: {
         [key: string]: unknown;
     };
+};
+
+/**
+ * VehicleCreate
+ */
+export type VehicleCreate = {
+    /**
+     * Plate
+     */
+    plate: string;
+    /**
+     * Type Id
+     */
+    type_id: string;
+};
+
+/**
+ * VehiclePublic
+ */
+export type VehiclePublic = {
+    /**
+     * Plate
+     */
+    plate: string;
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Owner Id
+     */
+    owner_id: string;
+    /**
+     * Type Id
+     */
+    type_id: string;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+};
+
+/**
+ * VehicleTypePublic
+ */
+export type VehicleTypePublic = {
+    /**
+     * Code
+     */
+    code: string;
+    /**
+     * Name
+     */
+    name: string;
+    /**
+     * Daily Rate Cop
+     */
+    daily_rate_cop: number;
+    /**
+     * Id
+     */
+    id: string;
+};
+
+/**
+ * VehiclesPublic
+ */
+export type VehiclesPublic = {
+    /**
+     * Data
+     */
+    data: Array<VehiclePublic>;
+    /**
+     * Count
+     */
+    count: number;
 };
 
 export type loginLoginAccessTokenData = {
@@ -772,154 +1270,564 @@ export type utilsHealthCheckResponses = {
 
 export type utilsHealthCheckResponse = utilsHealthCheckResponses[keyof utilsHealthCheckResponses];
 
-export type itemsReadItemsData = {
+export type vehiclesListMyVehiclesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/vehicles/';
+};
+
+export type vehiclesListMyVehiclesResponses = {
+    /**
+     * Successful Response
+     */
+    200: VehiclesPublic;
+};
+
+export type vehiclesListMyVehiclesResponse = vehiclesListMyVehiclesResponses[keyof vehiclesListMyVehiclesResponses];
+
+export type vehiclesRegisterVehicleData = {
+    body: VehicleCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/vehicles/';
+};
+
+export type vehiclesRegisterVehicleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type vehiclesRegisterVehicleError = vehiclesRegisterVehicleErrors[keyof vehiclesRegisterVehicleErrors];
+
+export type vehiclesRegisterVehicleResponses = {
+    /**
+     * Successful Response
+     */
+    200: VehiclePublic;
+};
+
+export type vehiclesRegisterVehicleResponse = vehiclesRegisterVehicleResponses[keyof vehiclesRegisterVehicleResponses];
+
+export type vehiclesListVehicleTypesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/vehicles/types';
+};
+
+export type vehiclesListVehicleTypesResponses = {
+    /**
+     * Response Vehicles-List Vehicle Types
+     *
+     * Successful Response
+     */
+    200: Array<VehicleTypePublic>;
+};
+
+export type vehiclesListVehicleTypesResponse = vehiclesListVehicleTypesResponses[keyof vehiclesListVehicleTypesResponses];
+
+export type vehiclesDeleteVehicleData = {
+    body?: never;
+    path: {
+        /**
+         * Vehicle Id
+         */
+        vehicle_id: string;
+    };
+    query?: never;
+    url: '/api/v1/vehicles/{vehicle_id}';
+};
+
+export type vehiclesDeleteVehicleErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type vehiclesDeleteVehicleError = vehiclesDeleteVehicleErrors[keyof vehiclesDeleteVehicleErrors];
+
+export type vehiclesDeleteVehicleResponses = {
+    /**
+     * Response Vehicles-Delete Vehicle
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type vehiclesDeleteVehicleResponse = vehiclesDeleteVehicleResponses[keyof vehiclesDeleteVehicleResponses];
+
+export type paymentsListPaymentMethodsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/payments/methods';
+};
+
+export type paymentsListPaymentMethodsResponses = {
+    /**
+     * Response Payments-List Payment Methods
+     *
+     * Successful Response
+     */
+    200: Array<PaymentMethodPublic>;
+};
+
+export type paymentsListPaymentMethodsResponse = paymentsListPaymentMethodsResponses[keyof paymentsListPaymentMethodsResponses];
+
+export type paymentsCreatePaymentData = {
+    body: PaymentInitiate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/payments/';
+};
+
+export type paymentsCreatePaymentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type paymentsCreatePaymentError = paymentsCreatePaymentErrors[keyof paymentsCreatePaymentErrors];
+
+export type paymentsCreatePaymentResponses = {
+    /**
+     * Successful Response
+     */
+    200: PaymentInitiateResponse;
+};
+
+export type paymentsCreatePaymentResponse = paymentsCreatePaymentResponses[keyof paymentsCreatePaymentResponses];
+
+export type paymentsListVehiclesWithPendingFeeData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/payments/pending';
+};
+
+export type paymentsListVehiclesWithPendingFeeResponses = {
+    /**
+     * Response Payments-List Vehicles With Pending Fee
+     *
+     * Successful Response
+     */
+    200: Array<VehiclePublic>;
+};
+
+export type paymentsListVehiclesWithPendingFeeResponse = paymentsListVehiclesWithPendingFeeResponses[keyof paymentsListVehiclesWithPendingFeeResponses];
+
+export type paymentsGetPaymentData = {
+    body?: never;
+    path: {
+        /**
+         * Payment Id
+         */
+        payment_id: string;
+    };
+    query?: never;
+    url: '/api/v1/payments/{payment_id}';
+};
+
+export type paymentsGetPaymentErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type paymentsGetPaymentError = paymentsGetPaymentErrors[keyof paymentsGetPaymentErrors];
+
+export type paymentsGetPaymentResponses = {
+    /**
+     * Successful Response
+     */
+    200: PaymentPublic;
+};
+
+export type paymentsGetPaymentResponse = paymentsGetPaymentResponses[keyof paymentsGetPaymentResponses];
+
+export type webhooksWompiWebhookData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/webhooks/wompi';
+};
+
+export type webhooksWompiWebhookResponses = {
+    /**
+     * Response Webhooks-Wompi Webhook
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type webhooksWompiWebhookResponse = webhooksWompiWebhookResponses[keyof webhooksWompiWebhookResponses];
+
+export type plansListPlansData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/plans/';
+};
+
+export type plansListPlansResponses = {
+    /**
+     * Successful Response
+     */
+    200: PlansPublic;
+};
+
+export type plansListPlansResponse = plansListPlansResponses[keyof plansListPlansResponses];
+
+export type plansCreatePlanData = {
+    body: PlanCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/plans/';
+};
+
+export type plansCreatePlanErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type plansCreatePlanError = plansCreatePlanErrors[keyof plansCreatePlanErrors];
+
+export type plansCreatePlanResponses = {
+    /**
+     * Successful Response
+     */
+    200: PlanPublic;
+};
+
+export type plansCreatePlanResponse = plansCreatePlanResponses[keyof plansCreatePlanResponses];
+
+export type plansUpdatePlanData = {
+    body: PlanUpdate;
+    path: {
+        /**
+         * Plan Id
+         */
+        plan_id: string;
+    };
+    query?: never;
+    url: '/api/v1/plans/{plan_id}';
+};
+
+export type plansUpdatePlanErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type plansUpdatePlanError = plansUpdatePlanErrors[keyof plansUpdatePlanErrors];
+
+export type plansUpdatePlanResponses = {
+    /**
+     * Successful Response
+     */
+    200: PlanPublic;
+};
+
+export type plansUpdatePlanResponse = plansUpdatePlanResponses[keyof plansUpdatePlanResponses];
+
+export type plansMyActiveSubscriptionData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/plans/subscriptions/me';
+};
+
+export type plansMyActiveSubscriptionResponses = {
+    /**
+     * Response Plans-My Active Subscription
+     *
+     * Successful Response
+     */
+    200: SubscriptionPublic | null;
+};
+
+export type plansMyActiveSubscriptionResponse = plansMyActiveSubscriptionResponses[keyof plansMyActiveSubscriptionResponses];
+
+export type historyGetPaymentHistoryData = {
     body?: never;
     path?: never;
     query?: {
         /**
-         * Skip
+         * Date From
          */
-        skip?: number;
+        date_from?: string | null;
+        /**
+         * Date To
+         */
+        date_to?: string | null;
+        /**
+         * Status Code
+         */
+        status_code?: PaymentStatusCode | null;
+        /**
+         * Limit
+         */
+        limit?: number;
+        /**
+         * Offset
+         */
+        offset?: number;
+    };
+    url: '/api/v1/history/';
+};
+
+export type historyGetPaymentHistoryErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type historyGetPaymentHistoryError = historyGetPaymentHistoryErrors[keyof historyGetPaymentHistoryErrors];
+
+export type historyGetPaymentHistoryResponses = {
+    /**
+     * Successful Response
+     */
+    200: PaymentsPublic;
+};
+
+export type historyGetPaymentHistoryResponse = historyGetPaymentHistoryResponses[keyof historyGetPaymentHistoryResponses];
+
+export type historyGetParkingLogData = {
+    body?: never;
+    path?: never;
+    query?: {
         /**
          * Limit
          */
         limit?: number;
     };
-    url: '/api/v1/items/';
+    url: '/api/v1/history/log';
 };
 
-export type itemsReadItemsErrors = {
+export type historyGetParkingLogErrors = {
     /**
      * Validation Error
      */
     422: HTTPValidationError;
 };
 
-export type itemsReadItemsError = itemsReadItemsErrors[keyof itemsReadItemsErrors];
+export type historyGetParkingLogError = historyGetParkingLogErrors[keyof historyGetParkingLogErrors];
 
-export type itemsReadItemsResponses = {
+export type historyGetParkingLogResponses = {
     /**
      * Successful Response
      */
-    200: ItemsPublic;
+    200: ParkingLogsPublic;
 };
 
-export type itemsReadItemsResponse = itemsReadItemsResponses[keyof itemsReadItemsResponses];
+export type historyGetParkingLogResponse = historyGetParkingLogResponses[keyof historyGetParkingLogResponses];
 
-export type itemsCreateItemData = {
-    body: ItemCreate;
+export type faqListFaqData = {
+    body?: never;
+    path?: never;
+    query?: {
+        /**
+         * Category
+         */
+        category?: string | null;
+    };
+    url: '/api/v1/faq/';
+};
+
+export type faqListFaqErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type faqListFaqError = faqListFaqErrors[keyof faqListFaqErrors];
+
+export type faqListFaqResponses = {
+    /**
+     * Successful Response
+     */
+    200: FAQsPublic;
+};
+
+export type faqListFaqResponse = faqListFaqResponses[keyof faqListFaqResponses];
+
+export type faqCreateFaqData = {
+    body: FAQCreate;
     path?: never;
     query?: never;
-    url: '/api/v1/items/';
+    url: '/api/v1/faq/';
 };
 
-export type itemsCreateItemErrors = {
+export type faqCreateFaqErrors = {
     /**
      * Validation Error
      */
     422: HTTPValidationError;
 };
 
-export type itemsCreateItemError = itemsCreateItemErrors[keyof itemsCreateItemErrors];
+export type faqCreateFaqError = faqCreateFaqErrors[keyof faqCreateFaqErrors];
 
-export type itemsCreateItemResponses = {
+export type faqCreateFaqResponses = {
     /**
      * Successful Response
      */
-    200: ItemPublic;
+    200: FAQPublic;
 };
 
-export type itemsCreateItemResponse = itemsCreateItemResponses[keyof itemsCreateItemResponses];
+export type faqCreateFaqResponse = faqCreateFaqResponses[keyof faqCreateFaqResponses];
 
-export type itemsDeleteItemData = {
+export type faqDeleteFaqData = {
     body?: never;
     path: {
         /**
-         * Id
+         * Faq Id
          */
-        id: string;
+        faq_id: string;
     };
     query?: never;
-    url: '/api/v1/items/{id}';
+    url: '/api/v1/faq/{faq_id}';
 };
 
-export type itemsDeleteItemErrors = {
+export type faqDeleteFaqErrors = {
     /**
      * Validation Error
      */
     422: HTTPValidationError;
 };
 
-export type itemsDeleteItemError = itemsDeleteItemErrors[keyof itemsDeleteItemErrors];
+export type faqDeleteFaqError = faqDeleteFaqErrors[keyof faqDeleteFaqErrors];
 
-export type itemsDeleteItemResponses = {
+export type faqDeleteFaqResponses = {
+    /**
+     * Response Faq-Delete Faq
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type faqDeleteFaqResponse = faqDeleteFaqResponses[keyof faqDeleteFaqResponses];
+
+export type faqUpdateFaqData = {
+    body: FAQUpdate;
+    path: {
+        /**
+         * Faq Id
+         */
+        faq_id: string;
+    };
+    query?: never;
+    url: '/api/v1/faq/{faq_id}';
+};
+
+export type faqUpdateFaqErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type faqUpdateFaqError = faqUpdateFaqErrors[keyof faqUpdateFaqErrors];
+
+export type faqUpdateFaqResponses = {
     /**
      * Successful Response
      */
-    200: Message;
+    200: FAQPublic;
 };
 
-export type itemsDeleteItemResponse = itemsDeleteItemResponses[keyof itemsDeleteItemResponses];
+export type faqUpdateFaqResponse = faqUpdateFaqResponses[keyof faqUpdateFaqResponses];
 
-export type itemsReadItemData = {
+export type supportListMyTicketsData = {
     body?: never;
-    path: {
-        /**
-         * Id
-         */
-        id: string;
-    };
+    path?: never;
     query?: never;
-    url: '/api/v1/items/{id}';
+    url: '/api/v1/support/';
 };
 
-export type itemsReadItemErrors = {
+export type supportListMyTicketsResponses = {
+    /**
+     * Successful Response
+     */
+    200: SupportTicketsPublic;
+};
+
+export type supportListMyTicketsResponse = supportListMyTicketsResponses[keyof supportListMyTicketsResponses];
+
+export type supportCreateTicketData = {
+    body: SupportTicketCreate;
+    path?: never;
+    query?: never;
+    url: '/api/v1/support/';
+};
+
+export type supportCreateTicketErrors = {
     /**
      * Validation Error
      */
     422: HTTPValidationError;
 };
 
-export type itemsReadItemError = itemsReadItemErrors[keyof itemsReadItemErrors];
+export type supportCreateTicketError = supportCreateTicketErrors[keyof supportCreateTicketErrors];
 
-export type itemsReadItemResponses = {
+export type supportCreateTicketResponses = {
     /**
      * Successful Response
      */
-    200: ItemPublic;
+    200: SupportTicketPublic;
 };
 
-export type itemsReadItemResponse = itemsReadItemResponses[keyof itemsReadItemResponses];
+export type supportCreateTicketResponse = supportCreateTicketResponses[keyof supportCreateTicketResponses];
 
-export type itemsUpdateItemData = {
-    body: ItemUpdate;
+export type supportUpdateTicketStatusData = {
+    body: SupportTicketUpdateStatus;
     path: {
         /**
-         * Id
+         * Ticket Id
          */
-        id: string;
+        ticket_id: string;
     };
     query?: never;
-    url: '/api/v1/items/{id}';
+    url: '/api/v1/support/{ticket_id}/status';
 };
 
-export type itemsUpdateItemErrors = {
+export type supportUpdateTicketStatusErrors = {
     /**
      * Validation Error
      */
     422: HTTPValidationError;
 };
 
-export type itemsUpdateItemError = itemsUpdateItemErrors[keyof itemsUpdateItemErrors];
+export type supportUpdateTicketStatusError = supportUpdateTicketStatusErrors[keyof supportUpdateTicketStatusErrors];
 
-export type itemsUpdateItemResponses = {
+export type supportUpdateTicketStatusResponses = {
     /**
      * Successful Response
      */
-    200: ItemPublic;
+    200: SupportTicketPublic;
 };
 
-export type itemsUpdateItemResponse = itemsUpdateItemResponses[keyof itemsUpdateItemResponses];
+export type supportUpdateTicketStatusResponse = supportUpdateTicketStatusResponses[keyof supportUpdateTicketStatusResponses];
 
 export type privateCreateUserData = {
     body: PrivateUserCreate;

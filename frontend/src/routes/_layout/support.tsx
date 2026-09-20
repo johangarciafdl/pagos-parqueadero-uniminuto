@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 
+import type { FAQPublic, SupportTicketPublic } from "@/client"
 import { FaqService, SupportService } from "@/client"
 import { Badge } from "@/components/ui/badge"
 import { NewTicketDialog } from "@/components/Support/NewTicketDialog"
@@ -29,8 +30,8 @@ function SupportPage() {
     queryFn: async () => (await SupportService.listMyTickets()).data,
   })
 
-  const categories = Array.from(
-    new Set(faqs?.data.map((faq) => faq.category) ?? []),
+  const categories: string[] = Array.from(
+    new Set(faqs?.data.map((faq: FAQPublic) => faq.category) ?? []),
   )
 
   return (
@@ -53,8 +54,8 @@ function SupportPage() {
           <h2 className="text-lg font-medium">{category}</h2>
           <div className="divide-y rounded-lg border">
             {faqs?.data
-              .filter((faq) => faq.category === category)
-              .map((faq) => (
+              .filter((faq: FAQPublic) => faq.category === category)
+              .map((faq: FAQPublic) => (
                 <details key={faq.id} className="group p-4">
                   <summary className="cursor-pointer list-none font-medium marker:content-none">
                     {faq.question}
@@ -80,7 +81,7 @@ function SupportPage() {
         </div>
 
         <div className="flex flex-col gap-3">
-          {tickets?.data.map((ticket) => (
+          {tickets?.data.map((ticket: SupportTicketPublic) => (
             <div
               key={ticket.id}
               className="flex flex-col gap-1 rounded-lg border p-4"

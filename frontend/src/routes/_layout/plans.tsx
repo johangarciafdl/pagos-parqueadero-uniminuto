@@ -2,6 +2,7 @@ import { useQuery } from "@tanstack/react-query"
 import { createFileRoute } from "@tanstack/react-router"
 import { useState } from "react"
 
+import type { PaymentMethodPublic, PlanPublic, VehicleTypePublic } from "@/client"
 import { PaymentsService, PlansService, VehiclesService } from "@/client"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -58,7 +59,7 @@ function PlansPage() {
   ])
 
   const typeName = (id: string) =>
-    vehicleTypes?.find((t) => t.id === id)?.name ?? ""
+    vehicleTypes?.find((t: VehicleTypePublic) => t.id === id)?.name ?? ""
 
   return (
     <div className="flex flex-col gap-6">
@@ -90,7 +91,7 @@ function PlansPage() {
             <SelectValue placeholder="Selecciona un método" />
           </SelectTrigger>
           <SelectContent>
-            {methods?.map((method) => (
+            {methods?.map((method: PaymentMethodPublic) => (
               <SelectItem key={method.id} value={method.id}>
                 {method.name}
               </SelectItem>
@@ -100,7 +101,7 @@ function PlansPage() {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {plans?.data.map((plan) => (
+        {plans?.data.map((plan: PlanPublic) => (
           <Card key={plan.id}>
             <CardHeader>
               <CardTitle>{plan.name}</CardTitle>

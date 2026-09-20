@@ -45,7 +45,10 @@ const formSchema = z
     is_superuser: z.boolean(),
     is_active: z.boolean(),
   })
-  .refine((data) => data.password === data.confirm_password, {
+  .refine(
+    (data: { password: string; confirm_password: string }) =>
+      data.password === data.confirm_password,
+    {
     message: "The passwords don't match",
     path: ["confirm_password"],
   })

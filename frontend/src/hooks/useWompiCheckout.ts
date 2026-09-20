@@ -1,6 +1,8 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 
-import { type PaymentInitiate, PaymentsService } from "@/client"
+import type { PaymentInitiate, PaymentInitiateResponse } from "@/client"
+import { PaymentsService } from "@/client"
+import type { WompiWidgetResult } from "@/types/wompi"
 import useCustomToast from "./useCustomToast"
 
 /**
@@ -19,7 +21,7 @@ export function useWompiCheckout(onSettledQueryKeys: unknown[][]) {
       const { data } = await PaymentsService.createPayment({ body })
       return data
     },
-    onSuccess: (payment) => {
+    onSuccess: (payment: PaymentInitiateResponse | undefined) => {
       if (!payment) return
       const checkout = new WidgetCheckout({
         currency: "COP",
@@ -28,7 +30,7 @@ export function useWompiCheckout(onSettledQueryKeys: unknown[][]) {
         publicKey: payment.wompi_public_key,
         signature: { integrity: payment.integrity_signature },
       })
-      checkout.open((result) => {
+      checkout.open((result: WompiWidgetResult) => {
         const approved = result.transaction.status === "APPROVED"
         if (approved) {
           showSuccessToast(
@@ -46,7 +48,7 @@ export function useWompiCheckout(onSettledQueryKeys: unknown[][]) {
         }, 2500)
       })
     },
-    onError: (error) => {
+    onError: (error: unknown) => {
       showErrorToast(
         error instanceof Error ? error.message : "No se pudo iniciar el pago",
       )
