@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: parqueadero-uniminuto
+    runtime: docker
+    plan: free
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: .
+    # Corre migraciones + siembra de catalogos/superusuario antes de
+    # levantar el servidor, en cada deploy (backend/scripts/prestart.sh).
+    dockerCommand: bash scripts/prestart.sh && fastapi run --workers 4
+    healthCheckPath: /api/v1/utils/health-check/
+    envVars:
+      - key: PROJECT_NAME
+        value: "Parqueadero UNIMINUTO - Pagos UWallet"
+      - key: SECRET_KEY
+        generateValue: true
+      - key: FIRST_SUPERUSER
+        sync: false
+      - key: FIRST_SUPERUSER_PASSWORD
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: FRONTEND_HOST
+        sync: false
+      - key: WOMPI_BASE_URL
+        value: "https://sandbox.wompi.co/v1"
+      - key: WOMPI_PUBLIC_KEY
+        sync: false
+      - key: WOMPI_PRIVATE_KEY
+        sync: false
+      - key: WOMPI_INTEGRITY_SECRET
+        sync: false
+      - key: WOMPI_EVENTS_SECRET
+        sync: false
