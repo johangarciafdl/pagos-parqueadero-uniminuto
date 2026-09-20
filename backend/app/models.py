@@ -58,12 +58,12 @@ class User(UserBase, table=True):
         default_factory=get_datetime_utc,
         sa_type=DateTime(timezone=True),  # type: ignore
     )
-    vehicles: list["Vehicle"] = Relationship(back_populates="owner", cascade_delete=True)
-    payments: list["Payment"] = Relationship(back_populates="user", cascade_delete=True)
-    subscriptions: list["Subscription"] = Relationship(
+    vehicles: list[Vehicle] = Relationship(back_populates="owner", cascade_delete=True)
+    payments: list[Payment] = Relationship(back_populates="user", cascade_delete=True)
+    subscriptions: list[Subscription] = Relationship(
         back_populates="user", cascade_delete=True
     )
-    support_tickets: list["SupportTicket"] = Relationship(
+    support_tickets: list[SupportTicket] = Relationship(
         back_populates="user", cascade_delete=True
     )
 
@@ -255,12 +255,17 @@ class PaymentConcept(StrEnum):
 
 
 class PaymentInitiate(SQLModel):
-    """Lo único que el cliente puede pedir: qué quiere pagar, no cuánto ni el estado."""
+    """Lo único que el cliente puede pedir: qué quiere pagar, no cuánto ni el
+    estado. La excepción es `amount_cop`, que solo se usa (y solo tiene
+    sentido) para el concepto RECHARGE, donde el monto es una elección
+    legítima del usuario; para cualquier otro concepto el servidor lo ignora
+    y calcula el monto real a partir del catálogo correspondiente."""
 
     concept: PaymentConcept
     method_id: uuid.UUID
     vehicle_id: uuid.UUID | None = None
     plan_id: uuid.UUID | None = None
+    amount_cop: int | None = Field(default=None, gt=0)
 
 
 class Payment(SQLModel, table=True):
