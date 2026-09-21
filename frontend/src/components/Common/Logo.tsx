@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router"
-import { ParkingSquare } from "lucide-react"
 
 import { cn } from "@/lib/utils"
 
@@ -15,12 +14,23 @@ export function Logo({
   asLink = true,
 }: LogoProps) {
   const icon = (extraClassName: string) => (
-    <ParkingSquare className={cn("shrink-0 text-primary", extraClassName)} />
+    <span
+      className={cn(
+        "inline-flex shrink-0 items-center justify-center rounded-md bg-white p-0.5",
+        extraClassName,
+      )}
+    >
+      <img
+        src="/assets/images/uniminuto-logo.svg"
+        alt="UNIMINUTO"
+        className="h-full w-full object-contain"
+      />
+    </span>
   )
 
   const wordmark = (
     <span className="font-semibold tracking-tight whitespace-nowrap">
-      Parqueadero UNIMINUTO
+      Parqueadero
     </span>
   )
 
