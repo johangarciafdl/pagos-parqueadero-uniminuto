@@ -11,6 +11,7 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as LayoutRouteImport } from './routes/_layout'
 import { Route as LoginRouteImport } from './routes/login'
+import { Route as PresentacionRouteImport } from './routes/presentacion'
 import { Route as StaffRouteImport } from './routes/staff'
 import { Route as LayoutIndexRouteImport } from './routes/_layout/index'
 import { Route as LayoutAdminRouteImport } from './routes/_layout/admin'
@@ -29,6 +30,11 @@ const LayoutRoute = LayoutRouteImport.update({
 const LoginRoute = LoginRouteImport.update({
   id: '/login',
   path: '/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PresentacionRoute = PresentacionRouteImport.update({
+  id: '/presentacion',
+  path: '/presentacion',
   getParentRoute: () => rootRouteImport,
 } as any)
 const StaffRoute = StaffRouteImport.update({
@@ -85,6 +91,7 @@ const LayoutVerifyQrRoute = LayoutVerifyQrRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof LayoutIndexRoute
   '/login': typeof LoginRoute
+  '/presentacion': typeof PresentacionRoute
   '/staff': typeof StaffRoute
   '/admin': typeof LayoutAdminRoute
   '/history': typeof LayoutHistoryRoute
@@ -97,6 +104,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/login': typeof LoginRoute
+  '/presentacion': typeof PresentacionRoute
   '/staff': typeof StaffRoute
   '/admin': typeof LayoutAdminRoute
   '/history': typeof LayoutHistoryRoute
@@ -112,6 +120,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_layout': typeof LayoutRouteWithChildren
   '/login': typeof LoginRoute
+  '/presentacion': typeof PresentacionRoute
   '/staff': typeof StaffRoute
   '/_layout/admin': typeof LayoutAdminRoute
   '/_layout/history': typeof LayoutHistoryRoute
@@ -128,6 +137,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/login'
+    | '/presentacion'
     | '/staff'
     | '/admin'
     | '/history'
@@ -140,6 +150,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/login'
+    | '/presentacion'
     | '/staff'
     | '/admin'
     | '/history'
@@ -154,6 +165,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/_layout'
     | '/login'
+    | '/presentacion'
     | '/staff'
     | '/_layout/admin'
     | '/_layout/history'
@@ -169,6 +181,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   LayoutRoute: typeof LayoutRouteWithChildren
   LoginRoute: typeof LoginRoute
+  PresentacionRoute: typeof PresentacionRoute
   StaffRoute: typeof StaffRoute
 }
 
@@ -186,6 +199,13 @@ declare module '@tanstack/react-router' {
       path: '/login'
       fullPath: '/login'
       preLoaderRoute: typeof LoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/presentacion': {
+      id: '/presentacion'
+      path: '/presentacion'
+      fullPath: '/presentacion'
+      preLoaderRoute: typeof PresentacionRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/staff': {
@@ -291,6 +311,7 @@ const LayoutRouteWithChildren =
 const rootRouteChildren: RootRouteChildren = {
   LayoutRoute: LayoutRouteWithChildren,
   LoginRoute: LoginRoute,
+  PresentacionRoute: PresentacionRoute,
   StaffRoute: StaffRoute,
 }
 export const routeTree = rootRouteImport
