@@ -4,6 +4,7 @@ Protegidos con un secreto compartido en el header `X-Cron-Secret` en vez de
 un JWT de usuario, porque quien los llama no es una persona con sesión.
 """
 
+import hmac
 from datetime import date, timedelta
 
 from fastapi import APIRouter, Header, HTTPException
@@ -21,7 +22,12 @@ _REMINDER_DAYS_BEFORE = (3, 1)
 
 
 def _require_cron_secret(x_cron_secret: str | None) -> None:
-    if not settings.CRON_SECRET or x_cron_secret != settings.CRON_SECRET:
+    # hmac.compare_digest en vez de `!=`: comparación en tiempo constante
+    # para que la respuesta no filtre, por temporización, cuántos
+    # caracteres del secreto adivinó un atacante.
+    if not settings.CRON_SECRET or not x_cron_secret or not hmac.compare_digest(
+        x_cron_secret, settings.CRON_SECRET
+    ):
         raise HTTPException(401, "No autorizado")
 
 

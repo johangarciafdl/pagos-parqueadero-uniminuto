@@ -6,6 +6,7 @@ que se llama la API REST directamente con httpx.
 """
 
 import hashlib
+import hmac
 
 from app.core.config import settings
 
@@ -50,4 +51,8 @@ def verify_event_signature(event: dict) -> bool:
 
     raw = "".join(parts) + str(timestamp) + settings.WOMPI_EVENTS_SECRET
     computed = hashlib.sha256(raw.encode("utf-8")).hexdigest()
-    return computed.lower() == str(checksum).lower()
+    # Comparación en tiempo constante: con `==` normal, el tiempo de
+    # respuesta variaría según cuántos caracteres iniciales coinciden,
+    # filtrando información que permitiría forjar un checksum válido
+    # byte a byte (ataque de temporización) contra este endpoint público.
+    return hmac.compare_digest(computed.lower(), str(checksum).lower())

@@ -25,6 +25,17 @@ _failed_attempts: dict[str, list[float]] = defaultdict(list)
 
 
 def _client_key(request: Request) -> str:
+    # En Render (y cualquier PaaS detrás de un proxy/balanceador), la
+    # conexión TCP que ve el proceso siempre llega desde la IP interna del
+    # proxy, no la del visitante real — `request.client.host` sería la
+    # misma para todo el tráfico, dejando el límite por IP inútil (o peor,
+    # bloqueando a todos los usuarios por los intentos fallidos de uno
+    # solo). Como el contenedor solo es alcanzable a través de ese proxy,
+    # se confía en `X-Forwarded-For` (primer valor = IP original del
+    # cliente) cuando está presente.
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
 
 
