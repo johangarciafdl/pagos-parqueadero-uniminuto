@@ -56,7 +56,9 @@ export const columns: ColumnDef<UserTableData>[] = [
         ? "Administrador"
         : role === "EXENTO"
           ? "Exento de pago"
-          : "Estudiante"
+          : role === "INVITADO"
+            ? "Invitado"
+            : "Estudiante"
       return (
         <Badge variant={is_superuser ? "default" : "secondary"}>{label}</Badge>
       )

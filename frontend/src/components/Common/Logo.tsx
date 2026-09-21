@@ -16,7 +16,7 @@ export function Logo({
   const icon = (extraClassName: string) => (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center justify-center rounded-md bg-white p-0.5",
+        "inline-flex shrink-0 items-center justify-center rounded-md bg-white p-1",
         extraClassName,
       )}
     >
@@ -36,17 +36,17 @@ export function Logo({
 
   const content =
     variant === "responsive" ? (
-      <div className={cn("flex items-center gap-2", className)}>
-        {icon("size-5")}
+      <div className={cn("flex flex-col items-center gap-1.5", className)}>
+        {icon("size-14")}
         <span className="group-data-[collapsible=icon]:hidden">
           {wordmark}
         </span>
       </div>
     ) : variant === "icon" ? (
-      icon(cn("size-5", className))
+      icon(cn("size-8", className))
     ) : (
-      <div className={cn("flex items-center gap-2", className)}>
-        {icon("size-6")}
+      <div className={cn("flex flex-col items-center gap-1.5", className)}>
+        {icon("size-16")}
         {wordmark}
       </div>
     )

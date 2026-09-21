@@ -1,9 +1,11 @@
+import uuid
+
 from fastapi.testclient import TestClient
 from sqlmodel import Session, select
 
 from app.core.config import settings
 from app.models import User
-from tests.utils.utils import random_student_id
+from tests.utils.utils import random_email, random_lower_string, random_student_id
 
 
 def test_kiosk_register(client: TestClient, db: Session) -> None:
@@ -162,3 +164,34 @@ def test_verify_qr_denies_student_without_plan(client: TestClient) -> None:
         f"{settings.API_V1_STR}/kiosk/verify-qr", json={"qr_token": qr_token}
     )
     assert unauthorized.status_code == 401
+
+
+def test_admin_created_invitado_has_no_free_access(
+    client: TestClient, db: Session, superuser_token_headers: dict[str, str]
+) -> None:
+    created = client.post(
+        f"{settings.API_V1_STR}/users/",
+        headers=superuser_token_headers,
+        json={
+            "email": random_email(),
+            "password": random_lower_string(),
+            "full_name": "Visitante de Prueba",
+            "role": "INVITADO",
+        },
+    )
+    assert created.status_code == 200
+    body = created.json()
+    assert body["role"] == "INVITADO"
+
+    user_db = db.exec(select(User).where(User.id == uuid.UUID(body["id"]))).first()
+    assert user_db and user_db.qr_token
+
+    verify = client.post(
+        f"{settings.API_V1_STR}/kiosk/verify-qr",
+        headers=superuser_token_headers,
+        json={"qr_token": user_db.qr_token},
+    )
+    assert verify.status_code == 200
+    result = verify.json()
+    assert result["rol"] == "INVITADO"
+    assert result["acceso_libre"] is False

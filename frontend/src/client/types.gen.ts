@@ -864,7 +864,7 @@ export type UserPublic = {
 /**
  * UserRole
  */
-export type UserRole = 'ESTUDIANTE' | 'EXENTO';
+export type UserRole = 'ESTUDIANTE' | 'INVITADO' | 'EXENTO';
 
 /**
  * UserUpdate

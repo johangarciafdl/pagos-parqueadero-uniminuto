@@ -21,7 +21,8 @@ def get_datetime_utc() -> datetime:
 # reservado para el administrador (permisos elevados, sí requiere contraseña).
 class UserRole(StrEnum):
     ESTUDIANTE = "ESTUDIANTE"
-    EXENTO = "EXENTO"  # personal de UNIMINUTO exento de pago del parqueadero
+    INVITADO = "INVITADO"  # visitante temporal: paga tarifa normal, igual que un estudiante
+    EXENTO = "EXENTO"  # personal administrativo de UNIMINUTO exento de pago del parqueadero
 
 
 class UserBase(SQLModel):

@@ -43,7 +43,7 @@ const formSchema = z
     email: z.email({ message: "Correo inválido" }),
     full_name: z.string().optional(),
     student_id: z.string().optional(),
-    role: z.enum(["ESTUDIANTE", "EXENTO"]),
+    role: z.enum(["ESTUDIANTE", "INVITADO", "EXENTO"]),
     password: z
       .string()
       .min(1, { message: "La contraseña es requerida" })
@@ -186,8 +186,11 @@ const AddUser = () => {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="ESTUDIANTE">Estudiante</SelectItem>
+                        <SelectItem value="INVITADO">
+                          Invitado (visitante, paga tarifa normal)
+                        </SelectItem>
                         <SelectItem value="EXENTO">
-                          Exento de pago (personal UNIMINUTO)
+                          Exento de pago (personal administrativo)
                         </SelectItem>
                       </SelectContent>
                     </Select>

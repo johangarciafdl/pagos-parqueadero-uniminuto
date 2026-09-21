@@ -15,6 +15,9 @@ def test_create_user(db: Session) -> None:
     user = crud.create_user(session=db, user_create=user_in)
     assert user.email == email
     assert hasattr(user, "hashed_password")
+    # el panel de admin también debe poder emitir un QR válido para
+    # personal exento dado de alta con correo y contraseña.
+    assert user.qr_token
 
 
 def test_authenticate_user(db: Session) -> None:
