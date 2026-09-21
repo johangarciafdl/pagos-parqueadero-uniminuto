@@ -1,0 +1,16 @@
+name: Keep Render service awake
+
+# El plan gratuito de Render duerme el servicio tras 15 min sin trafico, y la
+# siguiente visita paga el "cold start" (la pantalla de "waking up" de
+# Render). Este ping cada 10 minutos evita que llegue a dormirse.
+on:
+  schedule:
+    - cron: "*/10 * * * *"
+  workflow_dispatch: {}
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping health-check endpoint
+        run: curl -sf "https://parqueadero-uniminuto.onrender.com/api/v1/utils/health-check/"
