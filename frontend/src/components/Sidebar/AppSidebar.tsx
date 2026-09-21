@@ -37,15 +37,20 @@ const exentoItems: Item[] = [
 export function AppSidebar() {
   const { user: currentUser } = useAuth()
 
+  // El administrador tampoco paga parqueadero: su propia vista de "Pago /
+  // recarga" debe ser la misma simplificada de vehículos y QR que la de
+  // personal exento, con los módulos de administración aparte.
+  const isExentoLike = currentUser?.role === "EXENTO" || currentUser?.is_superuser
+
   const items = currentUser?.is_superuser
     ? [
-        ...baseItems,
+        ...exentoItems,
         { icon: Users, title: "Admin", path: "/admin" },
         { icon: UserPlus, title: "Registrar exento", path: "/staff-register" },
         { icon: ScanLine, title: "Verificar QR", path: "/verify-qr" },
         { icon: MessagesSquare, title: "Soporte (admin)", path: "/support-admin" },
       ]
-    : currentUser?.role === "EXENTO"
+    : isExentoLike
       ? exentoItems
       : baseItems
 

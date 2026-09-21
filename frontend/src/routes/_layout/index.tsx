@@ -17,7 +17,9 @@ export const Route = createFileRoute("/_layout/")({
 
 function Dashboard() {
   const { user: currentUser } = useAuth()
-  const isExento = currentUser?.role === "EXENTO"
+  // El admin tampoco paga parqueadero: su propia vista es la misma
+  // simplificada de vehículos y QR que la de personal exento.
+  const isExento = currentUser?.role === "EXENTO" || currentUser?.is_superuser
 
   const { data: vehicleTypes } = useQuery({
     queryKey: ["vehicle-types"],
