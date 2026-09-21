@@ -39,7 +39,10 @@ const useAuth = () => {
     },
     onSuccess: (result) => {
       localStorage.setItem("access_token", result.token.access_token)
-      queryClient.invalidateQueries({ queryKey: ["currentUser"] })
+      // Limpia todo el caché (no solo "currentUser"): datos de otra sesión
+      // en la misma pestaña (otro usuario, o el admin probando) no deben
+      // quedar visibles para la cuenta recién creada.
+      queryClient.clear()
     },
     onError: handleError.bind(showErrorToast),
   })
@@ -53,6 +56,7 @@ const useAuth = () => {
     onSuccess: (token) => {
       if (!token) return
       localStorage.setItem("access_token", token.access_token)
+      queryClient.clear()
       navigate({ to: "/" })
     },
     onError: handleError.bind(showErrorToast),
@@ -67,6 +71,7 @@ const useAuth = () => {
     onSuccess: (token) => {
       if (!token) return
       localStorage.setItem("access_token", token.access_token)
+      queryClient.clear()
       navigate({ to: "/" })
     },
     onError: handleError.bind(showErrorToast),
@@ -83,6 +88,7 @@ const useAuth = () => {
   const loginMutation = useMutation({
     mutationFn: login,
     onSuccess: () => {
+      queryClient.clear()
       navigate({ to: "/" })
     },
     onError: handleError.bind(showErrorToast),
@@ -90,6 +96,7 @@ const useAuth = () => {
 
   const logout = () => {
     localStorage.removeItem("access_token")
+    queryClient.clear()
     navigate({ to: "/login" })
   }
 

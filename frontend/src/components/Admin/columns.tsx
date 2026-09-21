@@ -65,6 +65,22 @@ export const columns: ColumnDef<UserTableData>[] = [
     },
   },
   {
+    accessorKey: "plan_until",
+    header: "Plan mensual",
+    cell: ({ row }) => {
+      const { role, plan_until } = row.original
+      if (role === "EXENTO") {
+        return <span className="text-muted-foreground">No aplica</span>
+      }
+      const isActive = !!plan_until && plan_until >= new Date().toISOString().slice(0, 10)
+      return (
+        <Badge variant={isActive ? "default" : "outline"}>
+          {isActive ? `Activo hasta ${plan_until}` : "Sin activar"}
+        </Badge>
+      )
+    },
+  },
+  {
     accessorKey: "is_active",
     header: "Estado",
     cell: ({ row }) => (

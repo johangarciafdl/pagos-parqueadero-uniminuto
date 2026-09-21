@@ -128,7 +128,7 @@ function PlansPage() {
                   })
                 }
               >
-                {subscription ? "Renovar" : "Comprar"}
+                {subscription ? "Renovar" : "Activar"}
               </LoadingButton>
             </CardFooter>
           </Card>
