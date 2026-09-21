@@ -50,9 +50,9 @@ export function PendingVehicleCard({ vehicle, dailyRateCOP }: Props) {
           ${dailyRateCOP.toLocaleString("es-CO")} COP
         </CardAction>
       </CardHeader>
-      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center">
+      <CardContent className="flex flex-wrap items-center gap-3">
         <Select value={methodId} onValueChange={setMethodId}>
-          <SelectTrigger className="w-full sm:w-56">
+          <SelectTrigger className="min-w-0 flex-1 basis-40">
             <SelectValue placeholder="Método de pago" />
           </SelectTrigger>
           <SelectContent>
@@ -64,6 +64,7 @@ export function PendingVehicleCard({ vehicle, dailyRateCOP }: Props) {
           </SelectContent>
         </Select>
         <LoadingButton
+          className="shrink-0"
           disabled={!canPay}
           loading={checkout.isPending}
           onClick={() =>

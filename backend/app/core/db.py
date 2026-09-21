@@ -75,9 +75,9 @@ def init_db(session: Session) -> None:
     _seed_catalog(session, PaymentMethod, PAYMENT_METHODS)
     _seed_catalog(session, PaymentStatus, PAYMENT_STATUSES)
 
-    # Un único plan mensual, sin diferenciar por tipo de vehículo. Inactivo
-    # por defecto: un admin lo activa desde el panel cuando esté listo para
-    # ofrecerse (PATCH /plans/{id} con active=true).
+    # Un único plan mensual, sin diferenciar por tipo de vehículo. Disponible
+    # para comprar desde el primer momento; cada usuario empieza sin haberlo
+    # adquirido (sin Subscription activa) hasta que paga.
     if not session.exec(select(Plan)).first():
         session.add(
             Plan(
@@ -85,7 +85,7 @@ def init_db(session: Session) -> None:
                 price_cop=50000,
                 duration_days=30,
                 conditions="Acceso ilimitado al parqueadero durante 30 días.",
-                active=False,
+                active=True,
             )
         )
         session.commit()

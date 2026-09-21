@@ -600,6 +600,53 @@ export type SubscriptionPublic = {
 };
 
 /**
+ * SupportTicketAdminPublic
+ */
+export type SupportTicketAdminPublic = {
+    /**
+     * Id
+     */
+    id: string;
+    /**
+     * Case Number
+     */
+    case_number: string;
+    /**
+     * Subject
+     */
+    subject: string;
+    /**
+     * Message
+     */
+    message: string;
+    status: SupportTicketStatus;
+    /**
+     * Admin Reply
+     */
+    admin_reply?: string | null;
+    /**
+     * Replied At
+     */
+    replied_at?: string | null;
+    /**
+     * Created At
+     */
+    created_at?: string | null;
+    /**
+     * Updated At
+     */
+    updated_at?: string | null;
+    /**
+     * Student Id
+     */
+    student_id?: string | null;
+    /**
+     * User Full Name
+     */
+    user_full_name?: string | null;
+};
+
+/**
  * SupportTicketCreate
  */
 export type SupportTicketCreate = {
@@ -635,6 +682,14 @@ export type SupportTicketPublic = {
     message: string;
     status: SupportTicketStatus;
     /**
+     * Admin Reply
+     */
+    admin_reply?: string | null;
+    /**
+     * Replied At
+     */
+    replied_at?: string | null;
+    /**
      * Created At
      */
     created_at?: string | null;
@@ -642,6 +697,16 @@ export type SupportTicketPublic = {
      * Updated At
      */
     updated_at?: string | null;
+};
+
+/**
+ * SupportTicketReply
+ */
+export type SupportTicketReply = {
+    /**
+     * Admin Reply
+     */
+    admin_reply: string;
 };
 
 /**
@@ -654,6 +719,20 @@ export type SupportTicketStatus = 'open' | 'in_progress' | 'resolved' | 'closed'
  */
 export type SupportTicketUpdateStatus = {
     status: SupportTicketStatus;
+};
+
+/**
+ * SupportTicketsAdminPublic
+ */
+export type SupportTicketsAdminPublic = {
+    /**
+     * Data
+     */
+    data: Array<SupportTicketAdminPublic>;
+    /**
+     * Count
+     */
+    count: number;
 };
 
 /**
@@ -807,6 +886,19 @@ export type UserUpdate = {
      * Full Name
      */
     full_name?: string | null;
+    /**
+     * First Name
+     */
+    first_name?: string | null;
+    /**
+     * Last Name
+     */
+    last_name?: string | null;
+    /**
+     * Student Id
+     */
+    student_id?: string | null;
+    role?: UserRole | null;
     /**
      * Password
      */
@@ -2089,6 +2181,52 @@ export type supportUpdateTicketStatusResponses = {
 };
 
 export type supportUpdateTicketStatusResponse = supportUpdateTicketStatusResponses[keyof supportUpdateTicketStatusResponses];
+
+export type supportListAllTicketsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/v1/support/all';
+};
+
+export type supportListAllTicketsResponses = {
+    /**
+     * Successful Response
+     */
+    200: SupportTicketsAdminPublic;
+};
+
+export type supportListAllTicketsResponse = supportListAllTicketsResponses[keyof supportListAllTicketsResponses];
+
+export type supportReplyTicketData = {
+    body: SupportTicketReply;
+    path: {
+        /**
+         * Ticket Id
+         */
+        ticket_id: string;
+    };
+    query?: never;
+    url: '/api/v1/support/{ticket_id}/reply';
+};
+
+export type supportReplyTicketErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type supportReplyTicketError = supportReplyTicketErrors[keyof supportReplyTicketErrors];
+
+export type supportReplyTicketResponses = {
+    /**
+     * Successful Response
+     */
+    200: SupportTicketPublic;
+};
+
+export type supportReplyTicketResponse = supportReplyTicketResponses[keyof supportReplyTicketResponses];
 
 export type pushGetPublicKeyData = {
     body?: never;

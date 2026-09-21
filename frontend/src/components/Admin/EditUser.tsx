@@ -28,16 +28,25 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const formSchema = z
   .object({
-    email: z.email({ message: "Invalid email address" }),
+    email: z.email({ message: "Correo inválido" }),
     full_name: z.string().optional(),
+    student_id: z.string().optional(),
+    role: z.enum(["ESTUDIANTE", "EXENTO"]),
     password: z
       .string()
-      .min(8, { message: "Password must be at least 8 characters" })
+      .min(8, { message: "Debe tener al menos 8 caracteres" })
       .optional()
       .or(z.literal("")),
     confirm_password: z.string().optional(),
@@ -48,9 +57,10 @@ const formSchema = z
     (data: { password?: string; confirm_password?: string }) =>
       !data.password || data.password === data.confirm_password,
     {
-    message: "The passwords don't match",
-    path: ["confirm_password"],
-  })
+      message: "Las contraseñas no coinciden",
+      path: ["confirm_password"],
+    },
+  )
 
 type FormData = z.infer<typeof formSchema>
 
@@ -71,6 +81,8 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
     defaultValues: {
       email: user.email ?? undefined,
       full_name: user.full_name ?? undefined,
+      student_id: user.student_id ?? undefined,
+      role: user.role,
       is_superuser: user.is_superuser,
       is_active: user.is_active,
     },
@@ -80,7 +92,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
     mutationFn: (data: FormData) =>
       UsersService.updateUser({ path: { user_id: user.id }, body: data }),
     onSuccess: () => {
-      showSuccessToast("User updated successfully")
+      showSuccessToast("Usuario actualizado correctamente")
       setIsOpen(false)
       onSuccess()
     },
@@ -91,7 +103,6 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
   })
 
   const onSubmit = (data: FormData) => {
-    // exclude confirm_password from submission data and remove password if empty
     const { confirm_password: _, ...submitData } = data
     if (!submitData.password) {
       delete submitData.password
@@ -106,15 +117,15 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
         onClick={() => setIsOpen(true)}
       >
         <Pencil />
-        Edit User
+        Editar usuario
       </DropdownMenuItem>
       <DialogContent className="sm:max-w-md">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <DialogHeader>
-              <DialogTitle>Edit User</DialogTitle>
+              <DialogTitle>Editar usuario</DialogTitle>
               <DialogDescription>
-                Update the user details below.
+                Actualiza los datos del usuario.
               </DialogDescription>
             </DialogHeader>
             <div className="grid gap-4 py-4">
@@ -124,11 +135,11 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Email <span className="text-destructive">*</span>
+                      Correo <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Email"
+                        placeholder="Correo"
                         type="email"
                         {...field}
                         required
@@ -144,10 +155,48 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                 name="full_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel>Nombre completo</FormLabel>
                     <FormControl>
-                      <Input placeholder="Full name" type="text" {...field} />
+                      <Input placeholder="Nombre completo" type="text" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="student_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ID / documento</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej. 0000123456" type="text" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rol</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ESTUDIANTE">Estudiante</SelectItem>
+                        <SelectItem value="EXENTO">
+                          Exento de pago (personal UNIMINUTO)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -158,10 +207,10 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Set Password</FormLabel>
+                    <FormLabel>Nueva contraseña</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Password"
+                        placeholder="Dejar en blanco para no cambiar"
                         type="password"
                         {...field}
                       />
@@ -176,10 +225,10 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                 name="confirm_password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Confirm Password</FormLabel>
+                    <FormLabel>Confirmar contraseña</FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Password"
+                        placeholder="Confirmar contraseña"
                         type="password"
                         {...field}
                       />
@@ -200,7 +249,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="font-normal">Is superuser?</FormLabel>
+                    <FormLabel className="font-normal">¿Es administrador?</FormLabel>
                   </FormItem>
                 )}
               />
@@ -216,7 +265,7 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="font-normal">Is active?</FormLabel>
+                    <FormLabel className="font-normal">¿Activo?</FormLabel>
                   </FormItem>
                 )}
               />
@@ -225,11 +274,11 @@ const EditUser = ({ user, onSuccess }: EditUserProps) => {
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={mutation.isPending}>
-                  Cancel
+                  Cancelar
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save
+                Guardar
               </LoadingButton>
             </DialogFooter>
           </form>

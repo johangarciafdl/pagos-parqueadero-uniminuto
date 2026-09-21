@@ -28,20 +28,29 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { LoadingButton } from "@/components/ui/loading-button"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import useCustomToast from "@/hooks/useCustomToast"
 import { handleError } from "@/utils"
 
 const formSchema = z
   .object({
-    email: z.email({ message: "Invalid email address" }),
+    email: z.email({ message: "Correo inválido" }),
     full_name: z.string().optional(),
+    student_id: z.string().optional(),
+    role: z.enum(["ESTUDIANTE", "EXENTO"]),
     password: z
       .string()
-      .min(1, { message: "Password is required" })
-      .min(8, { message: "Password must be at least 8 characters" }),
+      .min(1, { message: "La contraseña es requerida" })
+      .min(8, { message: "Debe tener al menos 8 caracteres" }),
     confirm_password: z
       .string()
-      .min(1, { message: "Please confirm your password" }),
+      .min(1, { message: "Confirma la contraseña" }),
     is_superuser: z.boolean(),
     is_active: z.boolean(),
   })
@@ -49,9 +58,10 @@ const formSchema = z
     (data: { password: string; confirm_password: string }) =>
       data.password === data.confirm_password,
     {
-    message: "The passwords don't match",
-    path: ["confirm_password"],
-  })
+      message: "Las contraseñas no coinciden",
+      path: ["confirm_password"],
+    },
+  )
 
 type FormData = z.infer<typeof formSchema>
 
@@ -67,17 +77,19 @@ const AddUser = () => {
     defaultValues: {
       email: "",
       full_name: "",
+      student_id: "",
+      role: "ESTUDIANTE",
       password: "",
       confirm_password: "",
       is_superuser: false,
-      is_active: false,
+      is_active: true,
     },
   })
 
   const mutation = useMutation({
     mutationFn: (data: UserCreate) => UsersService.createUser({ body: data }),
     onSuccess: () => {
-      showSuccessToast("User created successfully")
+      showSuccessToast("Usuario creado correctamente")
       form.reset()
       setIsOpen(false)
     },
@@ -96,14 +108,16 @@ const AddUser = () => {
       <DialogTrigger asChild>
         <Button className="my-4">
           <Plus className="mr-2" />
-          Add User
+          Agregar usuario
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Add User</DialogTitle>
+          <DialogTitle>Agregar usuario</DialogTitle>
           <DialogDescription>
-            Fill in the form below to add a new user to the system.
+            Crea una cuenta con correo y contraseña. Úsalo para personal
+            exento de pago que necesite iniciar sesión con credenciales, o
+            para otro administrador.
           </DialogDescription>
         </DialogHeader>
         <Form {...form}>
@@ -115,11 +129,11 @@ const AddUser = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Email <span className="text-destructive">*</span>
+                      Correo <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Email"
+                        placeholder="correo@uniminuto.edu.co"
                         type="email"
                         {...field}
                         required
@@ -135,10 +149,48 @@ const AddUser = () => {
                 name="full_name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel>Nombre completo</FormLabel>
                     <FormControl>
-                      <Input placeholder="Full name" type="text" {...field} />
+                      <Input placeholder="Nombre completo" type="text" {...field} />
                     </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="student_id"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>ID / documento</FormLabel>
+                    <FormControl>
+                      <Input placeholder="Ej. 0000123456" type="text" {...field} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+
+              <FormField
+                control={form.control}
+                name="role"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Rol</FormLabel>
+                    <Select value={field.value} onValueChange={field.onChange}>
+                      <FormControl>
+                        <SelectTrigger className="w-full">
+                          <SelectValue />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="ESTUDIANTE">Estudiante</SelectItem>
+                        <SelectItem value="EXENTO">
+                          Exento de pago (personal UNIMINUTO)
+                        </SelectItem>
+                      </SelectContent>
+                    </Select>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -150,11 +202,11 @@ const AddUser = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Set Password <span className="text-destructive">*</span>
+                      Contraseña <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Password"
+                        placeholder="Contraseña"
                         type="password"
                         {...field}
                         required
@@ -171,12 +223,12 @@ const AddUser = () => {
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Confirm Password{" "}
+                      Confirmar contraseña{" "}
                       <span className="text-destructive">*</span>
                     </FormLabel>
                     <FormControl>
                       <Input
-                        placeholder="Password"
+                        placeholder="Contraseña"
                         type="password"
                         {...field}
                         required
@@ -198,7 +250,7 @@ const AddUser = () => {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="font-normal">Is superuser?</FormLabel>
+                    <FormLabel className="font-normal">¿Es administrador?</FormLabel>
                   </FormItem>
                 )}
               />
@@ -214,7 +266,7 @@ const AddUser = () => {
                         onCheckedChange={field.onChange}
                       />
                     </FormControl>
-                    <FormLabel className="font-normal">Is active?</FormLabel>
+                    <FormLabel className="font-normal">¿Activo?</FormLabel>
                   </FormItem>
                 )}
               />
@@ -223,11 +275,11 @@ const AddUser = () => {
             <DialogFooter>
               <DialogClose asChild>
                 <Button variant="outline" disabled={mutation.isPending}>
-                  Cancel
+                  Cancelar
                 </Button>
               </DialogClose>
               <LoadingButton type="submit" loading={mutation.isPending}>
-                Save
+                Guardar
               </LoadingButton>
             </DialogFooter>
           </form>

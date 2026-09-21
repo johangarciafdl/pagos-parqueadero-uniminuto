@@ -99,6 +99,17 @@ function SupportPage() {
               <span className="text-muted-foreground text-xs">
                 {formatDateTime(ticket.created_at)}
               </span>
+              {ticket.admin_reply && (
+                <div className="bg-muted mt-2 rounded-md p-3">
+                  <p className="text-xs font-medium">
+                    Respuesta del parqueadero
+                  </p>
+                  <p className="mt-1 text-sm">{ticket.admin_reply}</p>
+                  <span className="text-muted-foreground mt-1 block text-xs">
+                    {formatDateTime(ticket.replied_at)}
+                  </span>
+                </div>
+              )}
             </div>
           ))}
           {tickets?.data.length === 0 && (

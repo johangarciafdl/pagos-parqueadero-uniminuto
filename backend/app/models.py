@@ -80,6 +80,10 @@ class UserUpdate(SQLModel):
     is_active: bool | None = None
     is_superuser: bool | None = None
     full_name: str | None = Field(default=None, max_length=255)
+    first_name: str | None = Field(default=None, max_length=100)
+    last_name: str | None = Field(default=None, max_length=150)
+    student_id: str | None = Field(default=None, max_length=20)
+    role: UserRole | None = None
     password: str | None = Field(default=None, min_length=8, max_length=128)
 
 
@@ -244,10 +248,12 @@ class PlanBase(SQLModel):
     price_cop: int = Field(ge=0)
     duration_days: int = Field(gt=0)
     conditions: str | None = Field(default=None, max_length=1000)
-    # Por defecto inactivo: un admin lo activa desde el panel cuando el
-    # plan mensual esté listo para venderse (un solo plan para todos los
-    # tipos de vehículo, no diferenciado por tipo).
-    active: bool = False
+    # Disponible para comprar desde el primer momento (un solo plan para
+    # todos los tipos de vehículo, no diferenciado por tipo). "Inactivo"
+    # es el estado de la SUSCRIPCIÓN de cada usuario hasta que paga, no el
+    # catálogo del plan. Un admin puede seguir desactivándolo si hace falta
+    # retirarlo temporalmente de la venta.
+    active: bool = True
 
 
 class PlanCreate(PlanBase):
@@ -483,6 +489,10 @@ class SupportTicketUpdateStatus(SQLModel):
     status: SupportTicketStatus
 
 
+class SupportTicketReply(SQLModel):
+    admin_reply: str = Field(min_length=1, max_length=2000)
+
+
 class SupportTicket(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
@@ -490,6 +500,8 @@ class SupportTicket(SQLModel, table=True):
     subject: str = Field(max_length=255)
     message: str = Field(max_length=2000)
     status: SupportTicketStatus = SupportTicketStatus.OPEN
+    admin_reply: str | None = Field(default=None, max_length=2000)
+    replied_at: datetime | None = Field(default=None, sa_type=DateTime(timezone=True))  # type: ignore
     created_at: datetime | None = Field(
         default_factory=get_datetime_utc, sa_type=DateTime(timezone=True)  # type: ignore
     )
@@ -505,12 +517,24 @@ class SupportTicketPublic(SQLModel):
     subject: str
     message: str
     status: SupportTicketStatus
+    admin_reply: str | None = None
+    replied_at: datetime | None = None
     created_at: datetime | None = None
     updated_at: datetime | None = None
 
 
 class SupportTicketsPublic(SQLModel):
     data: list[SupportTicketPublic]
+    count: int
+
+
+class SupportTicketAdminPublic(SupportTicketPublic):
+    student_id: str | None = None
+    user_full_name: str | None = None
+
+
+class SupportTicketsAdminPublic(SQLModel):
+    data: list[SupportTicketAdminPublic]
     count: int
 
 

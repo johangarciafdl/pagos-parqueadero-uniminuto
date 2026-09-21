@@ -19,6 +19,7 @@ def create_user(*, session: Session, user_create: UserCreate) -> User:
     db_obj = User.model_validate(
         user_create, update={"hashed_password": get_password_hash(user_create.password)}
     )
+    db_obj.qr_token = create_qr_token(db_obj)
     session.add(db_obj)
     session.commit()
     session.refresh(db_obj)
@@ -71,6 +72,9 @@ def reissue_qr_token(*, session: Session, user: User) -> User:
     return regenerate_qr_token(session=session, user=user)
 
 
+_QR_RELEVANT_FIELDS = {"first_name", "last_name", "full_name", "student_id", "role"}
+
+
 def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
     user_data = user_in.model_dump(exclude_unset=True)
     extra_data = {}
@@ -79,6 +83,8 @@ def update_user(*, session: Session, db_user: User, user_in: UserUpdate) -> Any:
         hashed_password = get_password_hash(password)
         extra_data["hashed_password"] = hashed_password
     db_user.sqlmodel_update(user_data, update=extra_data)
+    if db_user.qr_token and _QR_RELEVANT_FIELDS & user_data.keys():
+        db_user.qr_token = create_qr_token(db_user)
     session.add(db_user)
     session.commit()
     session.refresh(db_user)

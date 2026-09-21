@@ -2,6 +2,7 @@ import {
   CalendarClock,
   CircleHelp,
   History,
+  MessagesSquare,
   ParkingSquare,
   ScanLine,
   UserPlus,
@@ -36,6 +37,7 @@ export function AppSidebar() {
         { icon: Users, title: "Admin", path: "/admin" },
         { icon: UserPlus, title: "Registrar exento", path: "/staff-register" },
         { icon: ScanLine, title: "Verificar QR", path: "/verify-qr" },
+        { icon: MessagesSquare, title: "Soporte (admin)", path: "/support-admin" },
       ]
     : baseItems
 

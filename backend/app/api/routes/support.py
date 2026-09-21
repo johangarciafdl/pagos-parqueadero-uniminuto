@@ -8,9 +8,13 @@ from sqlmodel import select
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.models import (
     SupportTicket,
+    SupportTicketAdminPublic,
     SupportTicketCreate,
     SupportTicketPublic,
+    SupportTicketReply,
+    SupportTicketsAdminPublic,
     SupportTicketsPublic,
+    SupportTicketStatus,
     SupportTicketUpdateStatus,
 )
 
@@ -73,6 +77,48 @@ def update_ticket_status(
         raise HTTPException(404, "Solicitud no encontrada")
     ticket.status = body.status
     ticket.updated_at = datetime.now(UTC)
+    session.add(ticket)
+    session.commit()
+    session.refresh(ticket)
+    return ticket
+
+
+@router.get(
+    "/all",
+    response_model=SupportTicketsAdminPublic,
+    dependencies=[Depends(get_current_active_superuser)],
+)
+def list_all_tickets(session: SessionDep) -> SupportTicketsAdminPublic:
+    tickets = session.exec(
+        select(SupportTicket).order_by(SupportTicket.created_at.desc())  # type: ignore[union-attr]
+    ).all()
+    data = [
+        SupportTicketAdminPublic(
+            **ticket.model_dump(),
+            student_id=ticket.user.student_id if ticket.user else None,
+            user_full_name=ticket.user.full_name if ticket.user else None,
+        )
+        for ticket in tickets
+    ]
+    return SupportTicketsAdminPublic(data=data, count=len(data))
+
+
+@router.patch(
+    "/{ticket_id}/reply",
+    response_model=SupportTicketPublic,
+    dependencies=[Depends(get_current_active_superuser)],
+)
+def reply_ticket(
+    session: SessionDep, ticket_id: uuid.UUID, body: SupportTicketReply
+) -> SupportTicket:
+    ticket = session.get(SupportTicket, ticket_id)
+    if not ticket:
+        raise HTTPException(404, "Solicitud no encontrada")
+    now = datetime.now(UTC)
+    ticket.admin_reply = body.admin_reply
+    ticket.replied_at = now
+    ticket.status = SupportTicketStatus.RESOLVED
+    ticket.updated_at = now
     session.add(ticket)
     session.commit()
     session.refresh(ticket)
