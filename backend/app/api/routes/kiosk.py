@@ -1,3 +1,4 @@
+import uuid
 from datetime import timedelta
 
 from fastapi import APIRouter, Depends, HTTPException, Request
@@ -6,16 +7,21 @@ from app import crud
 from app.api.deps import CurrentUser, SessionDep, get_current_active_superuser
 from app.core import security
 from app.core.config import settings
-from app.core.qr import decode_qr_token, has_unlimited_access
+from app.core.qr import create_qr_token, decode_qr_token, has_unlimited_access
 from app.core.rate_limit import check_login_rate_limit, record_failed_login
 from app.models import (
     KioskRegister,
     KioskRegisterResponse,
     KioskSession,
+    ParkingLog,
+    ParkingLogAction,
     QRSession,
     StaffRegister,
     Token,
+    User,
     UserPublic,
+    Vehicle,
+    VerifyQR,
 )
 
 router = APIRouter(prefix="/kiosk", tags=["kiosk"])
@@ -116,13 +122,34 @@ def regenerate_qr(session: SessionDep, current_user: CurrentUser) -> dict:
     return {"qr_token": user.qr_token}
 
 
+@router.get("/vehicle-qr/{vehicle_id}")
+def vehicle_qr(
+    session: SessionDep, current_user: CurrentUser, vehicle_id: uuid.UUID
+) -> dict:
+    """QR de acceso para un vehículo puntual del usuario: mismos datos
+    básicos que el QR de sesión, más la placa, para que el parqueadero
+    identifique con qué vehículo entra (un usuario con varios vehículos
+    genera un QR distinto por cada uno)."""
+    vehicle = session.get(Vehicle, vehicle_id)
+    if not vehicle or vehicle.owner_id != current_user.id:
+        raise HTTPException(404, "Vehículo no encontrado")
+    return {
+        "qr_token": create_qr_token(current_user, plate=vehicle.plate),
+        "plate": vehicle.plate,
+    }
+
+
 @router.post(
     "/verify-qr", dependencies=[Depends(get_current_active_superuser)]
 )
-def verify_qr(body: QRSession) -> dict:
+def verify_qr(session: SessionDep, body: VerifyQR) -> dict:
     """Lector virtual del parqueadero: decodifica el QR (mismo formato que
     el lector físico real: nombre/apellido/rol/documento) y decide si se
     permite el paso sin cobro (exento o con plan vigente).
+
+    Si se informa `direction`, además deja un registro de entrada/salida
+    en la bitácora del usuario (el control físico de la barrera sigue
+    siendo del sistema original de UNIMINUTO; esto es solo trazabilidad).
 
     Reservado a personal del parqueadero (cuenta de administrador) porque
     expone datos personales de quien presente el QR.
@@ -130,11 +157,30 @@ def verify_qr(body: QRSession) -> dict:
     payload = decode_qr_token(body.qr_token)
     if not payload:
         raise HTTPException(400, "QR inválido o expirado")
+
+    if body.direction and payload["sub"]:
+        try:
+            user_id = uuid.UUID(payload["sub"])
+        except ValueError:
+            user_id = None
+        if user_id and session.get(User, user_id):
+            action = (
+                ParkingLogAction.ACCESS_ENTRY
+                if body.direction == "entrada"
+                else ParkingLogAction.ACCESS_EXIT
+            )
+            detail = (
+                f"Placa {payload['placa']}" if payload["placa"] else "Sin vehículo asociado"
+            )
+            session.add(ParkingLog(user_id=user_id, action=action, detail=detail))
+            session.commit()
+
     return {
         "nombre": payload["nombre"],
         "apellido": payload["apellido"],
         "rol": payload["rol"],
         "documento": payload["documento"],
         "plan_until": payload["plan_until"],
+        "placa": payload["placa"],
         "acceso_libre": has_unlimited_access(payload),
     }

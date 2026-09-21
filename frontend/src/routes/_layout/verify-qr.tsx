@@ -29,21 +29,24 @@ type VerifyResult = {
   rol: string
   documento: string
   plan_until: string | null
+  placa: string | null
   acceso_libre: boolean
 }
 
 function VerifyQr() {
-  const { showErrorToast } = useCustomToast()
+  const { showErrorToast, showSuccessToast } = useCustomToast()
   const [qrToken, setQrToken] = useState("")
+  const [lastToken, setLastToken] = useState("")
   const [result, setResult] = useState<VerifyResult | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   const verifyMutation = useMutation({
-    mutationFn: async () =>
-      (await KioskService.verifyQr({ body: { qr_token: qrToken.trim() } }))
+    mutationFn: async (token: string) =>
+      (await KioskService.verifyQr({ body: { qr_token: token } }))
         .data as unknown as VerifyResult,
-    onSuccess: (data) => {
+    onSuccess: (data, token) => {
       setResult(data)
+      setLastToken(token)
       setQrToken("")
       inputRef.current?.focus()
     },
@@ -53,10 +56,25 @@ function VerifyQr() {
     },
   })
 
+  const logMutation = useMutation({
+    mutationFn: async (direction: "entrada" | "salida") =>
+      (
+        await KioskService.verifyQr({
+          body: { qr_token: lastToken, direction },
+        })
+      ).data as unknown as VerifyResult,
+    onSuccess: (_data, direction) => {
+      showSuccessToast(
+        direction === "entrada" ? "Entrada registrada" : "Salida registrada",
+      )
+    },
+    onError: (err: Error) => showErrorToast(err.message),
+  })
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     if (!qrToken.trim()) return
-    verifyMutation.mutate()
+    verifyMutation.mutate(qrToken.trim())
   }
 
   return (
@@ -105,19 +123,47 @@ function VerifyQr() {
               </Badge>
             </CardTitle>
           </CardHeader>
-          <CardContent className="grid gap-1 text-sm">
-            <span>
-              <span className="text-muted-foreground">Documento: </span>
-              {result.documento}
-            </span>
-            <span>
-              <span className="text-muted-foreground">Rol: </span>
-              {result.rol}
-            </span>
-            <span>
-              <span className="text-muted-foreground">Plan vigente hasta: </span>
-              {result.plan_until ?? "Sin plan activo"}
-            </span>
+          <CardContent className="flex flex-col gap-4">
+            <div className="grid gap-1 text-sm">
+              <span>
+                <span className="text-muted-foreground">Documento: </span>
+                {result.documento}
+              </span>
+              <span>
+                <span className="text-muted-foreground">Rol: </span>
+                {result.rol}
+              </span>
+              <span>
+                <span className="text-muted-foreground">Plan vigente hasta: </span>
+                {result.plan_until ?? "Sin plan activo"}
+              </span>
+              <span>
+                <span className="text-muted-foreground">Vehículo: </span>
+                {result.placa ?? "Sin vehículo asociado a este QR"}
+              </span>
+            </div>
+            <div className="flex gap-2">
+              <LoadingButton
+                className="flex-1"
+                variant="outline"
+                loading={
+                  logMutation.isPending && logMutation.variables === "entrada"
+                }
+                onClick={() => logMutation.mutate("entrada")}
+              >
+                Registrar entrada
+              </LoadingButton>
+              <LoadingButton
+                className="flex-1"
+                variant="outline"
+                loading={
+                  logMutation.isPending && logMutation.variables === "salida"
+                }
+                onClick={() => logMutation.mutate("salida")}
+              >
+                Registrar salida
+              </LoadingButton>
+            </div>
           </CardContent>
         </Card>
       )}

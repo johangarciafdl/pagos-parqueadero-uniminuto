@@ -197,7 +197,7 @@ export type NewPassword = {
 /**
  * ParkingLogAction
  */
-export type ParkingLogAction = 'payment_created' | 'payment_approved' | 'payment_declined' | 'plan_activated' | 'plan_renewed';
+export type ParkingLogAction = 'payment_created' | 'payment_approved' | 'payment_declined' | 'plan_activated' | 'plan_renewed' | 'access_entry' | 'access_exit';
 
 /**
  * ParkingLogPublic
@@ -1033,6 +1033,20 @@ export type VehiclesPublic = {
     count: number;
 };
 
+/**
+ * VerifyQR
+ */
+export type VerifyQR = {
+    /**
+     * Qr Token
+     */
+    qr_token: string;
+    /**
+     * Direction
+     */
+    direction?: 'entrada' | 'salida' | null;
+};
+
 export type loginLoginAccessTokenData = {
     body: Body_login_login_access_token;
     path?: never;
@@ -1299,8 +1313,42 @@ export type kioskRegenerateQrResponses = {
 
 export type kioskRegenerateQrResponse = kioskRegenerateQrResponses[keyof kioskRegenerateQrResponses];
 
+export type kioskVehicleQrData = {
+    body?: never;
+    path: {
+        /**
+         * Vehicle Id
+         */
+        vehicle_id: string;
+    };
+    query?: never;
+    url: '/api/v1/kiosk/vehicle-qr/{vehicle_id}';
+};
+
+export type kioskVehicleQrErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type kioskVehicleQrError = kioskVehicleQrErrors[keyof kioskVehicleQrErrors];
+
+export type kioskVehicleQrResponses = {
+    /**
+     * Response Kiosk-Vehicle Qr
+     *
+     * Successful Response
+     */
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type kioskVehicleQrResponse = kioskVehicleQrResponses[keyof kioskVehicleQrResponses];
+
 export type kioskVerifyQrData = {
-    body: QRSession;
+    body: VerifyQR;
     path?: never;
     query?: never;
     url: '/api/v1/kiosk/verify-qr';

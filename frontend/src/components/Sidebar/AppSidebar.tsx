@@ -28,6 +28,12 @@ const baseItems: Item[] = [
   { icon: CircleHelp, title: "FAQ y soporte", path: "/support" },
 ]
 
+// El personal exento no paga parqueadero: no necesita planes, historial de
+// pagos ni soporte de pagos, solo registrar sus vehículos y mostrar el QR.
+const exentoItems: Item[] = [
+  { icon: ParkingSquare, title: "Mis vehículos y QR", path: "/" },
+]
+
 export function AppSidebar() {
   const { user: currentUser } = useAuth()
 
@@ -39,7 +45,9 @@ export function AppSidebar() {
         { icon: ScanLine, title: "Verificar QR", path: "/verify-qr" },
         { icon: MessagesSquare, title: "Soporte (admin)", path: "/support-admin" },
       ]
-    : baseItems
+    : currentUser?.role === "EXENTO"
+      ? exentoItems
+      : baseItems
 
   return (
     <Sidebar collapsible="icon">

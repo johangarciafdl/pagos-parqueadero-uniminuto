@@ -34,9 +34,10 @@ class QRPayload(TypedDict):
     rol: str
     documento: str
     plan_until: str | None
+    placa: str | None
 
 
-def create_qr_token(user: User) -> str:
+def create_qr_token(user: User, plate: str | None = None) -> str:
     now = datetime.now(UTC)
     payload: QRPayload = {
         "sub": str(user.id),
@@ -46,6 +47,7 @@ def create_qr_token(user: User) -> str:
         "rol": user.role.value,
         "documento": user.student_id or "",
         "plan_until": user.plan_until.isoformat() if user.plan_until else None,
+        "placa": plate,
     }
     return jwt.encode(
         {**payload, "iat": now, "exp": now + QR_VALIDITY},
@@ -66,6 +68,7 @@ def decode_qr_token(token: str) -> QRPayload | None:
         "rol": decoded.get("rol", UserRole.ESTUDIANTE.value),
         "documento": decoded.get("documento", ""),
         "plan_until": decoded.get("plan_until"),
+        "placa": decoded.get("placa"),
     }
 
 

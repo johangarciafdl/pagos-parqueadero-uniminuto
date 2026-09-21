@@ -166,6 +166,85 @@ def test_verify_qr_denies_student_without_plan(client: TestClient) -> None:
     assert unauthorized.status_code == 401
 
 
+def test_vehicle_qr_includes_plate_and_logs_entry_exit(
+    client: TestClient, superuser_token_headers: dict[str, str]
+) -> None:
+    student_id = random_student_id()
+    reg = client.post(
+        f"{settings.API_V1_STR}/kiosk/register",
+        json={"student_id": student_id, "first_name": "Con", "last_name": "Vehiculo"},
+    )
+    token = reg.json()["token"]["access_token"]
+    headers = {"Authorization": f"Bearer {token}"}
+
+    vehicle_type = client.get(f"{settings.API_V1_STR}/vehicles/types").json()[0]
+    vehicle = client.post(
+        f"{settings.API_V1_STR}/vehicles/",
+        headers=headers,
+        json={"plate": "ABC123", "type_id": vehicle_type["id"]},
+    )
+    assert vehicle.status_code == 200
+    vehicle_id = vehicle.json()["id"]
+
+    vqr = client.get(f"{settings.API_V1_STR}/kiosk/vehicle-qr/{vehicle_id}", headers=headers)
+    assert vqr.status_code == 200
+    assert vqr.json()["plate"] == "ABC123"
+    qr_token = vqr.json()["qr_token"]
+
+    entry = client.post(
+        f"{settings.API_V1_STR}/kiosk/verify-qr",
+        headers=superuser_token_headers,
+        json={"qr_token": qr_token, "direction": "entrada"},
+    )
+    assert entry.status_code == 200
+    assert entry.json()["placa"] == "ABC123"
+
+    exit_ = client.post(
+        f"{settings.API_V1_STR}/kiosk/verify-qr",
+        headers=superuser_token_headers,
+        json={"qr_token": qr_token, "direction": "salida"},
+    )
+    assert exit_.status_code == 200
+
+    logs = client.get(f"{settings.API_V1_STR}/history/log", headers=headers)
+    assert logs.status_code == 200
+    actions = [log["action"] for log in logs.json()["data"]]
+    assert "access_entry" in actions
+    assert "access_exit" in actions
+
+
+def test_vehicle_qr_denies_other_users_vehicle(
+    client: TestClient,
+) -> None:
+    owner_reg = client.post(
+        f"{settings.API_V1_STR}/kiosk/register",
+        json={"student_id": random_student_id(), "first_name": "Dueño", "last_name": "Uno"},
+    )
+    owner_headers = {
+        "Authorization": f"Bearer {owner_reg.json()['token']['access_token']}"
+    }
+    vehicle_type = client.get(f"{settings.API_V1_STR}/vehicles/types").json()[0]
+    vehicle = client.post(
+        f"{settings.API_V1_STR}/vehicles/",
+        headers=owner_headers,
+        json={"plate": "XYZ999", "type_id": vehicle_type["id"]},
+    )
+    vehicle_id = vehicle.json()["id"]
+
+    other_reg = client.post(
+        f"{settings.API_V1_STR}/kiosk/register",
+        json={"student_id": random_student_id(), "first_name": "Otro", "last_name": "Dos"},
+    )
+    other_headers = {
+        "Authorization": f"Bearer {other_reg.json()['token']['access_token']}"
+    }
+
+    r = client.get(
+        f"{settings.API_V1_STR}/kiosk/vehicle-qr/{vehicle_id}", headers=other_headers
+    )
+    assert r.status_code == 404
+
+
 def test_admin_created_invitado_has_no_free_access(
     client: TestClient, db: Session, superuser_token_headers: dict[str, str]
 ) -> None:

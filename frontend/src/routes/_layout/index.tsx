@@ -17,6 +17,7 @@ export const Route = createFileRoute("/_layout/")({
 
 function Dashboard() {
   const { user: currentUser } = useAuth()
+  const isExento = currentUser?.role === "EXENTO"
 
   const { data: vehicleTypes } = useQuery({
     queryKey: ["vehicle-types"],
@@ -32,6 +33,7 @@ function Dashboard() {
     queryKey: ["pending-vehicles"],
     queryFn: async () =>
       (await PaymentsService.listVehiclesWithPendingFee()).data ?? [],
+    enabled: !isExento,
   })
 
   const rateFor = (typeId: string) =>
@@ -45,7 +47,9 @@ function Dashboard() {
           Hola, {currentUser?.full_name || currentUser?.email} 👋
         </h1>
         <p className="text-muted-foreground">
-          Consulta y paga el valor del parqueadero de tus vehículos.
+          {isExento
+            ? "Registra tus vehículos y muestra el QR de acceso al ingresar al parqueadero."
+            : "Consulta y paga el valor del parqueadero de tus vehículos."}
         </p>
       </div>
 
@@ -54,28 +58,30 @@ function Dashboard() {
         <VehicleList />
       </div>
 
-      <div>
-        <h2 className="mb-3 text-lg font-medium">Valor pendiente</h2>
-        {!hasVehicles && !loadingVehicles && (
-          <p className="text-muted-foreground">
-            Registra un vehículo para poder consultar y pagar el parqueadero.
-          </p>
-        )}
-        {hasVehicles && pending.length === 0 && (
-          <p className="text-muted-foreground">
-            No tienes pagos pendientes hoy. ✅
-          </p>
-        )}
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {pending.map((vehicle: VehiclePublic) => (
-            <PendingVehicleCard
-              key={vehicle.id}
-              vehicle={vehicle}
-              dailyRateCOP={rateFor(vehicle.type_id)}
-            />
-          ))}
+      {!isExento && (
+        <div>
+          <h2 className="mb-3 text-lg font-medium">Valor pendiente</h2>
+          {!hasVehicles && !loadingVehicles && (
+            <p className="text-muted-foreground">
+              Registra un vehículo para poder consultar y pagar el parqueadero.
+            </p>
+          )}
+          {hasVehicles && pending.length === 0 && (
+            <p className="text-muted-foreground">
+              No tienes pagos pendientes hoy. ✅
+            </p>
+          )}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {pending.map((vehicle: VehiclePublic) => (
+              <PendingVehicleCard
+                key={vehicle.id}
+                vehicle={vehicle}
+                dailyRateCOP={rateFor(vehicle.type_id)}
+              />
+            ))}
+          </div>
         </div>
-      </div>
+      )}
     </div>
   )
 }

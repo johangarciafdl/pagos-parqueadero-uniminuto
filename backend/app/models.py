@@ -1,6 +1,7 @@
 import uuid
 from datetime import UTC, date, datetime
 from enum import StrEnum
+from typing import Literal
 
 from pydantic import EmailStr
 from sqlalchemy import DateTime
@@ -74,6 +75,15 @@ class KioskSession(SQLModel):
 
 class QRSession(SQLModel):
     qr_token: str = Field(min_length=1, max_length=2000)
+
+
+class VerifyQR(SQLModel):
+    qr_token: str = Field(min_length=1, max_length=2000)
+    # Si se informa, además de decodificar el QR se registra en la bitácora
+    # del usuario un evento de entrada o salida del vehículo indicado en el
+    # QR (el control físico de la barrera sigue siendo del sistema original
+    # de UNIMINUTO; esto solo deja trazabilidad de nuestro lado).
+    direction: Literal["entrada", "salida"] | None = None
 
 
 class UserUpdate(SQLModel):
@@ -410,6 +420,8 @@ class ParkingLogAction(StrEnum):
     PAYMENT_DECLINED = "payment_declined"
     PLAN_ACTIVATED = "plan_activated"
     PLAN_RENEWED = "plan_renewed"
+    ACCESS_ENTRY = "access_entry"
+    ACCESS_EXIT = "access_exit"
 
 
 class ParkingLog(SQLModel, table=True):
