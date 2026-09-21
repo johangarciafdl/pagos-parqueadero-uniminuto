@@ -37,10 +37,18 @@ function PlansPage() {
     queryFn: async () => (await PlansService.listPlans()).data,
   })
 
-  const { data: subscription } = useQuery({
+  // El cliente generado por @hey-api/openapi-ts convierte cualquier body
+  // JSON `null` en `{}` (bug conocido de su runtime: `data: o ?? {}`), y
+  // este endpoint devuelve `null` legítimamente cuando no hay suscripción
+  // activa. Sin este chequeo, `{}` es truthy y la tarjeta "Tu plan
+  // vigente" se mostraría para TODOS los usuarios. Se valida `id` (una
+  // suscripción real siempre lo tiene) en vez de confiar en la verdad del
+  // objeto.
+  const { data: subscriptionRaw } = useQuery({
     queryKey: ["my-subscription"],
     queryFn: async () => (await PlansService.myActiveSubscription()).data,
   })
+  const subscription = subscriptionRaw?.id ? subscriptionRaw : null
 
   const { data: methods } = useQuery({
     queryKey: ["payment-methods"],

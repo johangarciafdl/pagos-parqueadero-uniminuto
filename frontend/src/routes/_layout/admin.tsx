@@ -181,7 +181,17 @@ function PlanControl() {
             <LoadingButton
               variant={plan.active ? "outline" : "default"}
               loading={toggleMutation.isPending}
-              onClick={() => toggleMutation.mutate(plan)}
+              onClick={() => {
+                if (
+                  plan.active &&
+                  !window.confirm(
+                    "Esto oculta el plan para TODOS los estudiantes y nadie podrá comprarlo hasta que lo actives de nuevo. ¿Seguro que quieres desactivarlo?",
+                  )
+                ) {
+                  return
+                }
+                toggleMutation.mutate(plan)
+              }}
             >
               {plan.active ? "Desactivar" : "Activar"}
             </LoadingButton>
