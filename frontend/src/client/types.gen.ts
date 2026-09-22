@@ -35,6 +35,14 @@ export type Body_login_login_access_token = {
 };
 
 /**
+ * DocumentType
+ *
+ * Tipo de documento de identidad de un invitado (no tiene carné de
+ * estudiante, así que se identifica con su documento nacional).
+ */
+export type DocumentType = 'CC' | 'CE' | 'TI' | 'PASAPORTE';
+
+/**
  * FAQCreate
  */
 export type FAQCreate = {
@@ -116,6 +124,29 @@ export type FAQsPublic = {
      * Count
      */
     count: number;
+};
+
+/**
+ * GuestRegister
+ *
+ * Alta de un invitado/visitante: se identifica con documento nacional
+ * (tipo + número), no con un carné de estudiante. Paga la misma tarifa
+ * que un estudiante.
+ */
+export type GuestRegister = {
+    document_type: DocumentType;
+    /**
+     * Document Number
+     */
+    document_number: string;
+    /**
+     * First Name
+     */
+    first_name: string;
+    /**
+     * Last Name
+     */
+    last_name: string;
 };
 
 /**
@@ -811,6 +842,7 @@ export type UserCreate = {
      * Student Id
      */
     student_id?: string | null;
+    document_type?: DocumentType | null;
     role?: UserRole;
     /**
      * Plan Until
@@ -850,6 +882,7 @@ export type UserPublic = {
      * Student Id
      */
     student_id?: string | null;
+    document_type?: DocumentType | null;
     role: UserRole;
     /**
      * Plan Until
@@ -898,6 +931,7 @@ export type UserUpdate = {
      * Student Id
      */
     student_id?: string | null;
+    document_type?: DocumentType | null;
     role?: UserRole | null;
     /**
      * Password
@@ -1197,6 +1231,31 @@ export type kioskRegisterResponses = {
 };
 
 export type kioskRegisterResponse = kioskRegisterResponses[keyof kioskRegisterResponses];
+
+export type kioskRegisterGuestData = {
+    body: GuestRegister;
+    path?: never;
+    query?: never;
+    url: '/api/v1/kiosk/register-guest';
+};
+
+export type kioskRegisterGuestErrors = {
+    /**
+     * Validation Error
+     */
+    422: HTTPValidationError;
+};
+
+export type kioskRegisterGuestError = kioskRegisterGuestErrors[keyof kioskRegisterGuestErrors];
+
+export type kioskRegisterGuestResponses = {
+    /**
+     * Successful Response
+     */
+    200: KioskRegisterResponse;
+};
+
+export type kioskRegisterGuestResponse = kioskRegisterGuestResponses[keyof kioskRegisterGuestResponses];
 
 export type kioskRegisterStaffData = {
     body: StaffRegister;

@@ -6,6 +6,7 @@ from sqlmodel import Session, select
 from app.core.qr import create_qr_token, decode_qr_token
 from app.core.security import get_password_hash, verify_password
 from app.models import (
+    GuestRegister,
     KioskRegister,
     StaffRegister,
     User,
@@ -49,6 +50,25 @@ def create_staff_user(*, session: Session, data: StaffRegister) -> User:
         last_name=data.last_name,
         full_name=f"{data.first_name} {data.last_name}",
         role=UserRole.EXENTO,
+    )
+    db_obj.qr_token = create_qr_token(db_obj)
+    session.add(db_obj)
+    session.commit()
+    session.refresh(db_obj)
+    return db_obj
+
+
+def create_guest_user(*, session: Session, data: GuestRegister) -> User:
+    """Alta de un invitado/visitante: se identifica con documento nacional
+    en vez de un carné de estudiante, paga la misma tarifa que un
+    estudiante."""
+    db_obj = User(
+        student_id=data.document_number,
+        document_type=data.document_type,
+        first_name=data.first_name,
+        last_name=data.last_name,
+        full_name=f"{data.first_name} {data.last_name}",
+        role=UserRole.INVITADO,
     )
     db_obj.qr_token = create_qr_token(db_obj)
     session.add(db_obj)

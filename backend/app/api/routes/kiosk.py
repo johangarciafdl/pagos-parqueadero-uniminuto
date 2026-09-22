@@ -10,6 +10,7 @@ from app.core.config import settings
 from app.core.qr import create_qr_token, decode_qr_token, has_unlimited_access
 from app.core.rate_limit import check_login_rate_limit, record_failed_login
 from app.models import (
+    GuestRegister,
     KioskRegister,
     KioskRegisterResponse,
     KioskSession,
@@ -50,6 +51,27 @@ def register(session: SessionDep, body: KioskRegister) -> KioskRegisterResponse:
             status_code=400, detail="Ya existe una cuenta con ese ID de estudiante"
         )
     user = crud.create_kiosk_user(session=session, data=body)
+    return KioskRegisterResponse(
+        token=_issue_token(user.id),
+        qr_token=user.qr_token,
+        user=UserPublic.model_validate(user),
+    )
+
+
+@router.post("/register-guest", response_model=KioskRegisterResponse)
+def register_guest(session: SessionDep, body: GuestRegister) -> KioskRegisterResponse:
+    """Alta de un invitado/visitante: se identifica con documento nacional
+    (tipo + número), no con un carné de estudiante. Paga la misma tarifa
+    que un estudiante.
+    """
+    existing = crud.get_user_by_student_id(
+        session=session, student_id=body.document_number
+    )
+    if existing:
+        raise HTTPException(
+            status_code=400, detail="Ya existe una cuenta con ese documento"
+        )
+    user = crud.create_guest_user(session=session, data=body)
     return KioskRegisterResponse(
         token=_issue_token(user.id),
         qr_token=user.qr_token,

@@ -3,6 +3,7 @@ import { useNavigate } from "@tanstack/react-router"
 
 import {
   type Body_login_login_access_token as AccessToken,
+  type GuestRegister,
   KioskService,
   type KioskRegister,
   type KioskRegisterResponse,
@@ -42,6 +43,20 @@ const useAuth = () => {
       // Limpia todo el caché (no solo "currentUser"): datos de otra sesión
       // en la misma pestaña (otro usuario, o el admin probando) no deben
       // quedar visibles para la cuenta recién creada.
+      queryClient.clear()
+    },
+    onError: handleError.bind(showErrorToast),
+  })
+
+  // Registro de invitado: se identifica con documento nacional (tipo +
+  // número), no con un carné de estudiante.
+  const guestRegisterMutation = useMutation({
+    mutationFn: async (data: GuestRegister) => {
+      const { data: result } = await KioskService.registerGuest({ body: data })
+      return result as KioskRegisterResponse
+    },
+    onSuccess: (result) => {
+      localStorage.setItem("access_token", result.token.access_token)
       queryClient.clear()
     },
     onError: handleError.bind(showErrorToast),
@@ -102,6 +117,7 @@ const useAuth = () => {
 
   return {
     kioskRegisterMutation,
+    guestRegisterMutation,
     kioskSessionMutation,
     qrSessionMutation,
     loginMutation,

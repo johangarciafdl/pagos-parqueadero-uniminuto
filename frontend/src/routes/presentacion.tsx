@@ -168,7 +168,7 @@ function Presentacion() {
           <div className="overflow-hidden rounded-lg border">
             {/* eslint-disable-next-line jsx-a11y/media-has-caption */}
             <video controls className="w-full" preload="metadata">
-              <source src="/assets/video/demo.webm" type="video/webm" />
+              <source src="/assets/video/demo.mp4" type="video/mp4" />
               Tu navegador no soporta la reproducción de este video.
             </video>
           </div>

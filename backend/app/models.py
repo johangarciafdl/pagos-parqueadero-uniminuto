@@ -26,6 +26,16 @@ class UserRole(StrEnum):
     EXENTO = "EXENTO"  # personal administrativo de UNIMINUTO exento de pago del parqueadero
 
 
+class DocumentType(StrEnum):
+    """Tipo de documento de identidad de un invitado (no tiene carné de
+    estudiante, así que se identifica con su documento nacional)."""
+
+    CC = "CC"
+    CE = "CE"
+    TI = "TI"
+    PASAPORTE = "PASAPORTE"
+
+
 class UserBase(SQLModel):
     email: EmailStr | None = Field(
         default=None, unique=True, index=True, max_length=255
@@ -38,6 +48,7 @@ class UserBase(SQLModel):
     student_id: str | None = Field(
         default=None, unique=True, index=True, max_length=20
     )
+    document_type: DocumentType | None = None
     role: UserRole = UserRole.ESTUDIANTE
     # Fecha hasta la que tiene un plan mensual activo (o None). Se cachea acá
     # ademas de en Subscription para poder incluirla en el QR sin una
@@ -69,6 +80,17 @@ class StaffRegister(SQLModel):
     last_name: str = Field(min_length=1, max_length=150)
 
 
+class GuestRegister(SQLModel):
+    """Alta de un invitado/visitante: se identifica con documento nacional
+    (tipo + número), no con un carné de estudiante. Paga la misma tarifa
+    que un estudiante."""
+
+    document_type: DocumentType
+    document_number: str = Field(min_length=1, max_length=20)
+    first_name: str = Field(min_length=1, max_length=100)
+    last_name: str = Field(min_length=1, max_length=150)
+
+
 class KioskSession(SQLModel):
     student_id: str = Field(min_length=1, max_length=20)
 
@@ -94,6 +116,7 @@ class UserUpdate(SQLModel):
     first_name: str | None = Field(default=None, max_length=100)
     last_name: str | None = Field(default=None, max_length=150)
     student_id: str | None = Field(default=None, max_length=20)
+    document_type: DocumentType | None = None
     role: UserRole | None = None
     password: str | None = Field(default=None, min_length=8, max_length=128)
 
@@ -140,6 +163,7 @@ class UserPublic(SQLModel):
     is_superuser: bool
     full_name: str | None = None
     student_id: str | None = None
+    document_type: DocumentType | None = None
     role: UserRole
     plan_until: date | None = None
     created_at: datetime | None = None
@@ -374,8 +398,11 @@ class PaymentInitiate(SQLModel):
 class Payment(SQLModel, table=True):
     id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
     user_id: uuid.UUID = Field(foreign_key="user.id", nullable=False, ondelete="CASCADE")
+    # SET NULL (no CASCADE ni bloqueo): al borrar un vehículo, el historial
+    # de pagos hechos por él debe conservarse (auditoría), solo se
+    # desvincula del vehículo ya eliminado.
     vehicle_id: uuid.UUID | None = Field(
-        default=None, foreign_key="vehicle.id", nullable=True
+        default=None, foreign_key="vehicle.id", nullable=True, ondelete="SET NULL"
     )
     plan_id: uuid.UUID | None = Field(default=None, foreign_key="plan.id", nullable=True)
     method_id: uuid.UUID = Field(foreign_key="paymentmethod.id", nullable=False)
