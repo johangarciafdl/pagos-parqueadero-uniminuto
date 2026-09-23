@@ -13,4 +13,10 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping health-check endpoint
-        run: curl -sf "https://parqueadero-uniminuto.onrender.com/api/v1/utils/health-check/"
+        # --retry: el primer intento durante un "cold start" real de Render
+        # normalmente devuelve 502/503 mientras el contenedor arranca; sin
+        # reintentos, ese ping se marcaba como "failure" en vez de terminar
+        # de despertar el servicio.
+        run: >
+          curl -sf --retry 5 --retry-delay 10 --retry-all-errors
+          "https://parqueadero-uniminuto.onrender.com/api/v1/utils/health-check/"

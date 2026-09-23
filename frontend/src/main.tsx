@@ -17,6 +17,11 @@ import { routeTree } from "./routeTree.gen"
 client.setConfig({
   baseURL: import.meta.env.VITE_API_URL ?? "",
   auth: () => localStorage.getItem("access_token") || "",
+  // Render (plan gratis) puede tardar decenas de segundos en "despertar" el
+  // servicio tras estar inactivo; sin un timeout explícito, un request
+  // durante ese arranque se queda colgado indefinidamente en vez de fallar
+  // con un mensaje claro que el usuario pueda reintentar.
+  timeout: 25000,
 })
 
 const handleApiError = (error: Error) => {
